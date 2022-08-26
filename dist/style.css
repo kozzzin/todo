@@ -83,6 +83,7 @@ a {
     justify-content: space-between;
     align-items: center;
     align-content: center;
+    cursor: pointer;
 }
 
 .sidebar ul li.active {
@@ -107,6 +108,7 @@ a {
 .sidebar a.new-project {
     justify-content: center;
     text-align: center;
+    margin-top: 5px;
 }
 
 .sidebar a.new-project {

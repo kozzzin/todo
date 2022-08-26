@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do Soft</title>
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="./main.js"></script>
+    <script type="module" src="./main.js"></script>
 </head>
 <body>
     <div class="content">
@@ -26,13 +26,12 @@
                     <li><a class="week" href="#">This Week</a><span class="count">1</span></li>
                 </ul>
                 <h4>Projects</h4>
-                <ul>
+                <!-- <ul>
                     <li><a class="website" href="#">Website</a><span class="count">0</span></li>
                     <li><a class="bigapp" href="#">Big App</a><span class="count">55</span></li>
                     <li><a class="database" href="#">Database</a><span class="count">8</span></li>
-                    <li ></li>
                 </ul>
-                <a href="#" class="new-project"><span class="red-plus">+</span> <span>New Project</span></a>
+                <a href="#" class="new-project"><span class="red-plus">+</span> <span>New Project</span></a> -->
             </aside>
             <main class="main-content">
                 <h2>So let's start</h2>
@@ -48,7 +47,8 @@
                         <span class="task-name">Make this happen</span>
                         <span class="task-priority">Low</span>
                         <span class="task-date">14:00 25.05.2029 <a href="">Website</a></span>
-                        <span class="task-project"></span>
+                        <span class="task-project">
+                        </span>
                     </li>
                     <li>
                         <span class="task-check"><input type="checkbox" name="" data-id=""></span>
@@ -61,7 +61,14 @@
                                 <option>low</option>
                             </select>
                         </span>
-                        <span class="task-date"><input type="date"></span>
+                        <span class="task-date"><input type="date">
+                            <select>
+                                <option value="" disabled>Choose project</option>
+                                <option selected>Website</option>
+                                <option>Big App</option>
+                                <option>Database</option>
+                            </select>
+                        </span>
                         <span class="task-edit-buttons">
                             <button class="save">Save</button>
                             <button class="cancel">Cancel</button>

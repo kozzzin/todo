@@ -1,78 +1,11 @@
+const { createTask, tasksStorage, projects } = require('./tasks');
+const { templates } = require('./templates')
+
+
 console.log('huy na!');
 
-const projects = {};
 
-
-
-
-const tasksStorage = (function() {
-    const tasksStorage = {};
-
-    return {
-        addToStorage(task) {
-            tasksStorage[task.id] = task;
-        },
-    
-        deleteFromStorageById(id) {
-            if (id in tasksStorage) {
-                delete tasksStorage[id];
-            } else {
-                console.log(`no such id: ${id}`);
-            }
-        },
-
-        getTaskById(id) {
-
-        },
-
-        loadAllTasks() {
-            for (let task of Object.keys(tasksStorage)) {
-                console.log(task, tasksStorage[task]);
-            }
-        }
-    }
-})();
-
-class Task {
-    static idCounter = 0
-
-    constructor(name,due,priority,desc,proj) {
-        this.name = name;
-        this.due = due;
-        this.priority = priority;
-        this.desc = desc;
-        this.id = this.constructor.addID();  
-        this.proj = this.constructor.addToProject(projects, proj, this.id);
-        this.status = true;
-        console.log(this);
-    }
-
-    static addID() {
-        return this.idCounter++;
-    }
-
-    static addToProject(projects, project, id) {
-        if (project) {
-            if (!(project in projects)) {
-                projects[project] = [];
-            }
-            projects[project].push(id);
-            return project;
-        }
-        return null;
-    }
-
-    deleteTask() {
-
-    }
-
-}
-
-function createTask() {
-    
-}
-
-const task = new Task(
+const task = createTask(
     'take money',
     '10/12/2009',
     'medium',
@@ -80,29 +13,58 @@ const task = new Task(
     'website'
 );
 
-const task2 = new Task(
+createTask(
     'take money',
     '10/12/2009',
     'medium',
     'vaflia must be eaten',
     'website'
 );
+
+createTask(
+    'take money',
+    '10/12/2009',
+    'medium',
+    'vaflia must be eaten',
+    'website'
+);
+
 
 console.log(task);
 
-tasksStorage.addToStorage(task);
-tasksStorage.addToStorage(task2);
+
+tasksStorage.loadAllTasks();
 
 tasksStorage.deleteFromStorageById(0);
-tasksStorage.deleteFromStorageById(1);
+
+console.log(tasksStorage.getTaskById(0));
+
+
+const updater = tasksStorage.getTaskById(0);
+
+
+tasksStorage.updateTaskById(0,updater);
 
 tasksStorage.loadAllTasks();
 
 
-function createTask(name,due,priority,desc,proj) {
 
-    todosArchive[task.id] = task;
-}
+console.log(projects.getTasksOfProject('website'));
+
+projects.addProject('biba');
+projects.addProject('laba');
+projects.addProject('zalupka');
 
 
-    // Task.idCounter += 1;
+console.log(Object.keys(projects.getAllProjects()));
+
+
+
+// render projects list
+templates.renderProjects(
+    document.querySelector('.sidebar'),
+    Object.values(projects.getAllProjects())
+);
+
+
+templates.renderTasks();
