@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 16px;
+}
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.content {
+    flex: 1;
+    background-color: beige;
+}
+
+.layout-container {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: 50px 1fr;
+}
+
+.navbar,
+.sidebar,
+.main-content {
+    padding: 25px;
+}
+
+.navbar {
+    display: grid;
+    grid-row: 1/2;
+    grid-column: 1/-1;
+    background-color: black;
+    align-content: center;
+    align-items: center;
+    justify-content: space-between;
+    grid-template-columns: 1fr 1fr;
+}
+
+.navbar,
+.navbar a {
+    color: #fff;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.navigation {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.navigation ul {
+    list-style: none;
+}
+
+.sidebar {
+    background-color: bisque;
+}
+
+.sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar ul li {
+    /* margin-top: 0.5rem; */
+    padding: 0.5rem;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+}
+
+.sidebar ul li.active {
+    background-color: #ccc;
+}
+
+.sidebar ul li:hover {
+    background-color: #ccc;
+}
+
+.sidebar ul li a {
+    color: #000;
+    /* border-bottom: 1px dotted #ccc; */
+    font-weight: 300;
+}
+
+.sidebar ul li .count {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.sidebar a.new-project {
+    justify-content: center;
+    text-align: center;
+}
+
+.sidebar a.new-project {
+    display: flex;
+    color: #000;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid black;
+    box-sizing: border-box;
+    padding: 10px;
+    width: calc(100% - 1rem);
+    margin-left: 0.5rem;
+    font-weight: 700;
+}
+
+.sidebar .red-plus {
+    display: inline-block;
+    color: #ff0000;
+    margin: 0 3px 3px 0;
+    font-size: 1.2rem;
+}
+
+.sidebar h4 {
+    margin: 0;
+    margin: 1.5rem 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.main-content {
+    background-color: #fff;
+}
+
+.main-content h2 {
+    margin: 0 0 10px 0;
+    padding: 0;
+}
+
+ul.todos {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+ul.todos li {
+    display: grid;
+    grid-template-columns: 2rem 1fr 8rem;
+    grid-template-rows: 2fr 1fr;
+    align-items: center;
+    align-content: center;
+    box-sizing: border-box;
+    grid-auto-flow: row;
+}
+
+.todos .task-name {
+    font-size: 1.3rem;
+    font-weight: 300;
+}
+
+.todos .task-date {
+    grid-column: 2/-2;
+    font-size: 0.7rem;
+}
+
+.todos .task-priority {
+    display: inline-block;
+    padding: 5px;
+    text-align: center;
+    background-color: red;
+    grid-column: -2/-1;
+}
+
+ul.todos li::after {
+    content: '';
+    display: block;
+    height: 1px;
+    background-color: rgba(0,0,0,0.2);
+    width: 100%;
+    margin: 10px 0;
+    grid-row: -1;
+    grid-column: 1/-1;
+}
+
+.todos .task-check {
+    display: flex;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    justify-content: center;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    border: 1px solid black;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+input[type="checkbox"]:checked::before {
+    content: '✓';
+    font-size: 1rem;
+    font-weight: 300;
+    grid-row: 1/2;
+    grid-column: 1/2;
+    font-family: 'Exo 2', sans-serif;
+}
+
+input[type="text"] {
+    appearance: none;
+    border: 0;
+    box-shadow: 0;
+    font-size: 1.3rem;
+    font-weight: 300;
+    border: 1px solid #ccc;
+}
+
+.task-edit-buttons {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+}
+
+.task-edit-buttons button {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+}
+
+input[type="datetime-local"] {
+    cursor: pointer;
+}
+
+.task-priority-edit {
+    
+}
+
+.task-priority-edit select {
+    width: 100%;
+    height: 100%;
+}
+
+button.save {
+    background-color: lightgreen;
+}
+
+button.cancel {
+    background-color: lightcoral;
+}
