@@ -7,8 +7,14 @@ const helpers = (function() {
                 console.log(`no such key: ${key}`);
                 return false;
             }
+        },
+
+        capitalizer(str) {
+            return str[0].toUpperCase() + str.slice(1);
         }
+        
     }
 })();
+
 
 module.exports = { helpers };

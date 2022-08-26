@@ -152,7 +152,8 @@ ul.todos {
     list-style: none;
 }
 
-ul.todos li {
+ul.todos li,
+ul.todos form {
     display: grid;
     grid-template-columns: 2rem 1fr 8rem;
     grid-template-rows: 2fr 1fr;
@@ -162,12 +163,25 @@ ul.todos li {
     grid-auto-flow: row;
 }
 
+ul.todos li.todo-form {
+    display: flex;
+    flex-direction: column;
+}
+
+ul.todos li.todo-form form {
+    width: 100%;
+    flex: 1;
+    clear: both;
+}
+
+
+
 .todos .task-name {
     font-size: 1.3rem;
     font-weight: 300;
 }
 
-.todos .task-date {
+.todos .task-extras {
     grid-column: 2/-2;
     font-size: 0.7rem;
 }
@@ -229,9 +243,17 @@ input[type="text"] {
     border: 1px solid #ccc;
 }
 
+input[type="text"].project {
+    font-size: 0.7rem;
+}
+
 .task-edit-buttons {
     display: grid;
     grid-template-columns: repeat(2,1fr);
+}
+
+.task-project {
+    margin-left: 5px;
 }
 
 .task-edit-buttons button {

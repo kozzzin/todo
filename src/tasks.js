@@ -64,6 +64,7 @@ const projects = (function() {
 
     return {
         addProject(name) {
+            // check if name has been taken, not delete the old one
             projectsStorage[name] = new Project(name);
         },
 

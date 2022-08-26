@@ -9,6 +9,9 @@
     <script type="module" src="./main.js"></script>
 </head>
 <body>
+    <!-- <script type="module">
+        import { formSubmit } from './main';
+    </script> -->
     <div class="content">
         <section class="layout-container">
             <header class="navbar">
@@ -40,44 +43,70 @@
                         <span class="task-check"><input type="checkbox" name="" data-id="" checked></span>
                         <span class="task-name">Wash your ass</span>
                         <span class="task-priority">High</span>
-                        <span class="task-date">11:00 25.06.2023</span>
+                        <div class="task-extras">
+                            <span class="task-date">11:00 25.06.2023</span>
+                        </div>
                     </li>
                     <li>
                         <span class="task-check"><input type="checkbox" name="" data-id=""></span>
                         <span class="task-name">Make this happen</span>
                         <span class="task-priority">Low</span>
-                        <span class="task-date">14:00 25.05.2029 <a href="">Website</a></span>
-                        <span class="task-project">
-                        </span>
+                        <div class="task-extras">
+                            <span class="task-date">14:00 25.05.2029</span>
+                            <span class="task-project"><a href="">Website</a></span>
+                        </div>
                     </li>
-                    <li>
-                        <span class="task-check"><input type="checkbox" name="" data-id=""></span>
-                        <span class="task-name"><input type="text" placeholder="Make this happen"></span>
-                        <span class="task-priority-edit">
-                            <select>
-                                <option value="" disabled selected>Change priority</option>
-                                <option>high</option>
-                                <option>medium</option>
-                                <option>low</option>
-                            </select>
-                        </span>
-                        <span class="task-date"><input type="date">
-                            <select>
-                                <option value="" disabled>Choose project</option>
-                                <option selected>Website</option>
-                                <option>Big App</option>
-                                <option>Database</option>
-                            </select>
-                        </span>
-                        <span class="task-edit-buttons">
-                            <button class="save">Save</button>
-                            <button class="cancel">Cancel</button>
-                        </span>
+                    
+
+                    <li class="todo-form">
+                        <form class="todo-new-form">
+                            <span class="task-check"><!--<input type="checkbox" name="" data-id="">--></span>
+
+                            <span class="task-name"><input type="text" placeholder="To do..." name="task-name" required></span>
+
+                            <span class="task-priority-edit">
+                                <label>Priority:
+                                    <select name="task-priority">
+                                        <!-- <option value="" disabled selected>Select priority</option> -->
+                                        <option value="low">low</option>
+                                        <option value="medium">medium</option>
+                                        <option value="high">high</option>
+                                    </select>
+                                </label>
+                            </span>
+
+                            <div class="task-extras">
+                                <span class="task-date">
+                                    <label>Deadline: 
+                                        <input type="date"  name="task-date">
+                                    </label>
+                                    </span>
+                                <span class="task-project">
+                                    <label>Project: 
+                                        <input type="text" list="project" class="project" placeholder="Add to Project"  name="task-project">
+                                    </label>
+                                    <datalist id="project">
+                                        <option>Website</option>
+                                        <option>Big App</option>
+                                        <option>Database</option>
+                                    </datalist>
+                                </span>
+                            </div>
+
+                            <span class="task-edit-buttons">
+                                <button type="submit" class="save">Save</button>
+                                <button class="cancel">Cancel</button>
+                            </span>
+                        </form>
                     </li>
+
+
+
+
                 </ul>
             </main>
         </section>
     </div>
-    
+
 </body>
 </html>

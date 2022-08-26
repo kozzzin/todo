@@ -57,6 +57,12 @@ const eventAggregator = (function() {
 
 
 
+// function for right extraction order from a task object!
+// maybe return as object
+
+
+
+
 eventAggregator.publish('click','fuck');
 
 eventAggregator.subscribe('click',function(arg) {
