@@ -34,6 +34,23 @@ const tasksStorage = (function() {
     }
 })();
 
+const priorities = (function() {
+    const priorities = {
+        0: 'low',
+        1: 'medium',
+        2: 'high'
+    }
+    return {
+        getPriority(id) {
+            return priorities[id];
+        },
+
+        getAllPriorities() {
+            return priorities;
+        }
+    }
+})();
+
 const projects = (function() {
 
     class Project {
@@ -47,7 +64,7 @@ const projects = (function() {
         }
 
         deleteTask(id) {
-            const index = tasks.findIndex(id);
+            const index = this.tasks.findIndex((el) => el == id);
             this.tasks.splice(index,1);
         }
 
@@ -64,6 +81,7 @@ const projects = (function() {
 
     return {
         addProject(name) {
+            name = name.toLowerCase();
             // check if name has been taken, not delete the old one
             projectsStorage[name] = new Project(name);
         },
@@ -88,9 +106,12 @@ const projects = (function() {
             const project = this.getProject(name);
             const tasksIds = project.getTasks();
             const tasks = tasksStorage.loadAllTasks();
+            const result = [];
             tasksIds.forEach((id) => {
-                console.log(tasks[id]);
+               result.push(tasks[id]);
             });
+            console.log(result);
+            return result;
         }
     }
 })();
@@ -121,7 +142,7 @@ class Task {
             projects.getProject(project).addTask(id);
             return project;
         }
-        return null;
+        return undefined;
     }
 
     deleteTask() {
@@ -140,7 +161,7 @@ function createTask(name,due,priority,desc,project) {
         due,
         priority,
         desc,
-        project
+        project.toLowerCase()
     ); 
     tasksStorage.addToStorage(task);
     return task;
@@ -151,4 +172,4 @@ function createTask(name,due,priority,desc,project) {
 // -- createTask
 // -- addTaskTo Projects
 
-module.exports = { createTask, tasksStorage, projects }
+module.exports = { createTask, tasksStorage, projects, priorities }

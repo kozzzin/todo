@@ -25,7 +25,12 @@ class Event {
 
     fire(args) {
         this.handlers.forEach((handler) => {
-            handler(args);
+            if (Array.isArray(args)) {
+                handler(...args);
+            } else {
+                handler(args);
+            }
+            
         });
     }
 }
@@ -60,16 +65,13 @@ const eventAggregator = (function() {
 // function for right extraction order from a task object!
 // maybe return as object
 
+function eventController(event,eventArgs) {
+    eventAggregator.publish(event,eventArgs);
 
+   if (event === 'resetButtonClicked') {
+       console.log(event);
+   }
 
+}
 
-eventAggregator.publish('click','fuck');
-
-eventAggregator.subscribe('click',function(arg) {
-    console.log(arg);
-});
-
-eventAggregator.publish('click','sucker');
-
-
-console.log(eventAggregator.showEvents()['click']);
+module.exports = { eventAggregator, eventController }

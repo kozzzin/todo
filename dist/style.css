@@ -155,13 +155,22 @@ ul.todos {
 ul.todos li,
 ul.todos form {
     display: grid;
-    grid-template-columns: 2rem 1fr 8rem;
+    grid-template-columns: 2rem 1fr 8rem 2rem;
     grid-template-rows: 2fr 1fr;
     align-items: center;
     align-content: center;
     box-sizing: border-box;
     grid-auto-flow: row;
 }
+
+ul.todos li {
+    cursor: pointer;
+}
+
+ul.todos li img:hover {
+    color: red;
+}
+
 
 ul.todos li.todo-form {
     display: flex;
@@ -182,7 +191,7 @@ ul.todos li.todo-form form {
 }
 
 .todos .task-extras {
-    grid-column: 2/-2;
+    grid-column: 2/-3;
     font-size: 0.7rem;
 }
 
@@ -191,7 +200,7 @@ ul.todos li.todo-form form {
     padding: 5px;
     text-align: center;
     background-color: red;
-    grid-column: -2/-1;
+    grid-column: -3/-2;
 }
 
 ul.todos li::after {
@@ -211,6 +220,47 @@ ul.todos li::after {
     margin-top: 5px;
     margin-bottom: 5px;
     justify-content: center;
+}
+
+.add-task-plus {
+    border: 2px solid black;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+ul.todos li.add-task-li {
+    display: grid;
+    grid-template-columns: 2rem 1fr 8rem;
+    grid-template-rows: 1fr;
+    align-items: center;
+    align-content: center;
+    box-sizing: border-box;
+    grid-auto-flow: row;
+    font-weight: 400;
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+
+ul.todos li.add-task-li:hover {
+    color: green;
+}
+
+.add-task-plus::before {
+    content: '+';
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Exo 2', sans-serif;
+    margin-top: -3px;
+}
+
+.add-task-text {
+    
 }
 
 input[type="checkbox"] {
@@ -247,8 +297,41 @@ input[type="text"].project {
     font-size: 0.7rem;
 }
 
+.task-edit {
+    grid-column: -2/-1;
+    grid-row: 1/-1;
+    text-align: right;
+}
+
+.task-edit a {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: black;
+    margin: 5px;
+}
+
+.task-edit a:hover {
+    background-color: green;
+}
+
+.task-edit a.link-task-edit {
+    -webkit-mask: url('./img/edit.svg') no-repeat center;
+    mask: url('./img/edit.svg') no-repeat center;
+}
+
+.task-edit a.link-task-delete {
+    -webkit-mask: url('./img/delete.svg') no-repeat center;
+    mask: url('./img/delete.svg') no-repeat center;
+}
+
+.task-edit img {
+    max-width: 1.5rem;
+}
+
 .task-edit-buttons {
     display: grid;
+    grid-column: -3/-2;
     grid-template-columns: repeat(2,1fr);
 }
 
@@ -282,3 +365,4 @@ button.save {
 button.cancel {
     background-color: lightcoral;
 }
+

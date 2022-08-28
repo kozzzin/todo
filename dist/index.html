@@ -24,7 +24,7 @@
             </header>
             <aside class="sidebar">
                 <ul>
-                    <li class="active"><a class="all" href="#">Everything</a><span class="count">10</span></li>
+                    <li class="active" onclick="eventsController('showAllTasks')"><a class="all" href="#">Everything</a><span class="count">10</span></li>
                     <li><a class="today" href="#">Today</a><span class="count">5</span></li>
                     <li><a class="week" href="#">This Week</a><span class="count">1</span></li>
                 </ul>
@@ -38,7 +38,7 @@
             </aside>
             <main class="main-content">
                 <h2>So let's start</h2>
-                <ul class="todos">
+                <!-- <ul class="todos">
                     <li>
                         <span class="task-check"><input type="checkbox" name="" data-id="" checked></span>
                         <span class="task-name">Wash your ass</span>
@@ -60,14 +60,13 @@
 
                     <li class="todo-form">
                         <form class="todo-new-form">
-                            <span class="task-check"><!--<input type="checkbox" name="" data-id="">--></span>
+                            <span class="task-check"></span>
 
                             <span class="task-name"><input type="text" placeholder="To do..." name="task-name" required></span>
 
                             <span class="task-priority-edit">
                                 <label>Priority:
                                     <select name="task-priority">
-                                        <!-- <option value="" disabled selected>Select priority</option> -->
                                         <option value="low">low</option>
                                         <option value="medium">medium</option>
                                         <option value="high">high</option>
@@ -103,7 +102,7 @@
 
 
 
-                </ul>
+                </ul> -->
             </main>
         </section>
     </div>
