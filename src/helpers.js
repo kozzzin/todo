@@ -11,6 +11,12 @@ const helpers = (function() {
 
         capitalizer(str) {
             return str[0].toUpperCase() + str.slice(1);
+        },
+
+        todayDate(date) { 
+            let today = new Date();
+            today = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            return today;
         }
         
     }

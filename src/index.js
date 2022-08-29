@@ -1,6 +1,25 @@
 const { createTask, tasksStorage, projects } = require('./tasks');
-const { templates } = require('./templates')
+const { templates } = require('./templates');
 const { eventAggregator } = require('./events');
+import { formatDistance, subDays } from 'date-fns'
+
+const testDAte = formatDistance(subDays(new Date(), -3), new Date(), { addSuffix: true });
+
+
+
+
+
+const dateNow = Date.now();
+// dateNow.setTime(0);
+
+// console.log(dateNow.getHours());
+
+// const dateParse = Date.parse('2022-05-11');
+// console.log(dateParse)
+// console.log(new Date(dateParse).getMonth()+1);
+
+// console.log(testDAte)
+//=> "3 days ago"
 
 
 console.log('huy na!');
@@ -30,27 +49,53 @@ createTask(
     'laba'
 );
 
+createTask(
+    'today is task',
+    '2022-08-29',
+    '1',
+    'vaflia must be eaten',
+    'todays'
+);
 
-// console.log(task);
-
-
-// tasksStorage.loadAllTasks();
-
-// tasksStorage.deleteFromStorageById(0);
-
-// console.log(tasksStorage.getTaskById(0));
-
-
-// const updater = tasksStorage.getTaskById(0);
-
-
-// tasksStorage.updateTaskById(0,updater);
-
-// tasksStorage.loadAllTasks();
+createTask(
+    'today is task 2',
+    '2022-08-29',
+    '1',
+    'vaflia must be eaten',
+    'todays'
+);
 
 
 
-// console.log(projects.getTasksOfProject('website'));
+createTask(
+    '6 sept',
+    '2022-09-06',
+    '1',
+    'vaflia must be eaten',
+    'weeks'
+);
+
+
+createTask(
+    '5 sept',
+    '2022-09-05',
+    '1',
+    'vaflia must be eaten',
+    'weeks'
+);
+
+createTask(
+    '4 sept',
+    '2022-09-04',
+    '1',
+    'vaflia must be eaten',
+    'weeks'
+);
+
+
+
+
+
 
 projects.addProject('biba');
 projects.addProject('zalupka');
@@ -59,11 +104,12 @@ projects.addProject('zalupka');
 console.log(Object.keys(projects.getAllProjects()));
 
 
+templates.renderBasicHeader();
 
 // render projects list
 templates.renderProjects(
     document.querySelector('.sidebar'),
-    Object.values(projects.getAllProjects())
+    Object.values(projects.getAllProjectsSorted())
 );
 
 
@@ -111,20 +157,16 @@ function formSubmit(e,edit=false) {
         );
     }
     
-
-
-
     console.log(tasksStorage.loadAllTasks());
 
     templates.renderProjects(
         document.querySelector('.sidebar'),
-        Object.values(projects.getAllProjects())
+        Object.values(projects.getAllProjectsSorted())
     );
     
     
     templates.renderTasks();
 };
-
 
 
 templates.templatesController();
@@ -136,18 +178,35 @@ templates.templatesController();
 
 // window.formSubmit = formSubmit;
 // window.renderForm = templates.renderForm;
-window.renderTasks = templates.renderTasks;
-window.editTask = templates.editTask;
-window.deleteTask = templates.deleteTask;
+// window.renderTasks = templates.renderTasks;
+// window.editTask = templates.editTask;
+// window.deleteTask = templates.deleteTask;
 // window.eventController = eventController;
+
+
 window.projects = projects;
+
+
+function showTodayTasks() {
+    const today = Date.now();
+    const anotherDay = new Date(2022,7,29)
+    console.log(today == anotherDay);    
+}
+
+showTodayTasks();
 
 
 
 eventAggregator.subscribe('formSubmit',formSubmit);
 eventAggregator.subscribe('showAllTasks',templates.renderTasks);
+eventAggregator.subscribe('showAllTasks',templates.renderBasicHeader);
 eventAggregator.subscribe('addTask',templates.renderForm);
 eventAggregator.subscribe('projectClick', templates.renderTasks);
+eventAggregator.subscribe('projectClick', templates.renderProjectHeader);
+eventAggregator.subscribe('editTaskClick', templates.editTask);
+eventAggregator.subscribe('deleteTaskClick', templates.deleteTask);
+eventAggregator.subscribe('showTodayTasks', templates.renderTodayTasks);
+eventAggregator.subscribe('showWeekTasks', templates.renderWeekTasks);
 
 function eventsController(event,eventArgs) {
     // ...eventArgs

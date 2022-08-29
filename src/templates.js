@@ -1,4 +1,5 @@
 const { priorities, projects, tasksStorage  } = require('./tasks') ;
+const { helpers } = require('./helpers');
 
 const templates = (function() {
 
@@ -18,8 +19,9 @@ const templates = (function() {
                 'data-name': project.name,
                 'onclick': `eventsController('projectClick',
                 [
-                    renderTasks(document.querySelector('.main-content')),
-                    projects.getTasksOfProject('${project.name}')
+                    document.querySelector('.main-content'),
+                    projects.getTasksOfProject('${project.name}'),
+                    '${project.name}'
                 ])`
             });
             const a = document.createElement('a');
@@ -82,7 +84,10 @@ const templates = (function() {
 
 
             const taskPriority = document.createElement('span');
-            taskPriority.className = 'task-priority';
+            taskPriority.classList.add(
+                'task-priority',
+                priorities.getPriority(task.priority)
+            );
             taskPriority.innerText = priorities.getPriority(task.priority);
 
             const taskExtras = document.createElement('div');
@@ -109,7 +114,7 @@ const templates = (function() {
 
             const imgsDiv = document.createElement('div');
             imgsDiv.className = 'task-edit'
-            const imgs = '<a onclick="editTask(event)" class="link-task-edit"></a><a onclick="deleteTask(event)" class="link-task-delete"></a>';
+            const imgs = '<a onclick="eventsController(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventsController(\'deleteTaskClick\',event)" class="link-task-delete"></a>';
 
             // 'data-id': task.id,
             // 'onclick': 'editTask(event)'
@@ -149,8 +154,7 @@ const templates = (function() {
 
     function createForm(target,id,edit=false) {   
         let name,date,priority,project,placeholder;
-        let today = new Date();
-        today = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const today = helpers.todayDate();
 
         if (id !== undefined) {
             const task = tasksStorage.getTaskById(id);
@@ -161,7 +165,7 @@ const templates = (function() {
         } else {
             placeholder = 'To do...';
             name='';
-            date = today;
+            date = undefined;
             project = 'Add to Project';
         
         }
@@ -177,6 +181,7 @@ const templates = (function() {
         const form = document.createElement('form');
         form.classList = 'todo-new-form';
         form.setAttribute('data-id',id);
+        form.setAttribute('method','post');
 
         const taskCheck = document.createElement('span');
         taskCheck.classList = 'task-check';
@@ -301,19 +306,35 @@ const templates = (function() {
             document.querySelector('.add-task-li').remove();
         } catch {
             
-        }
-        
+        }   
     }
 
-    
+    function addTasksHeader(placeholder, header) {
+        // if header in projects, render project
+        // else if header in time brackets, render
+        // else render tasks
+        header = helpers.capitalizer(header);
+        let h2 = document.querySelector('h2');
+        if (h2) {
+            h2.innerText = '';
+        } else {
+            h2 = document.createElement('h2');
+            document.querySelector('.main-content').appendChild(h2);
+        }
+        
+        if (placeholder != undefined) {
+            h2.innerText = placeholder;
+        }
+        h2.innerText += ' ' + header;
+    }
 
    
 
     return {
         renderProjects(target, projects) {
-            if (projects == undefined) {
-                projects = ['website','big app', 'database'];
-            }
+            // projects = Object.keys(projects);
+            // // projects.sort((a,b) => a - b);
+            // console.log(projects);
             projectList(target, projects);
         },   
         
@@ -324,6 +345,42 @@ const templates = (function() {
             if (target === undefined) {
                 target = document.querySelector('.main-content');
             }
+            tasksList(target, tasks);
+            
+        },
+
+        renderTodayTasks(target,tasks) {
+            // if (tasks === undefined) {
+            //     tasks = Object.values(tasksStorage.loadAllTasks());
+            // }
+            if (target === undefined) {
+                target = document.querySelector('.main-content');
+            }
+
+            tasks = tasksStorage.getTasksByDate('today');
+
+            console.log('tasks ---> ', tasks);
+
+            addTasksHeader('Due date: ', 'today');
+
+            tasksList(target, tasks);
+            
+        },
+
+        renderWeekTasks(target,tasks) {
+            // if (tasks === undefined) {
+            //     tasks = Object.values(tasksStorage.loadAllTasks());
+            // }
+            if (target === undefined) {
+                target = document.querySelector('.main-content');
+            }
+
+            tasks = tasksStorage.getTasksByDate('week');
+
+            console.log('tasks ---> ', tasks);
+
+            addTasksHeader('Due date: ', 'next week');
+
             tasksList(target, tasks);
             
         },
@@ -342,6 +399,15 @@ const templates = (function() {
 
         hideForm() {
 
+        },
+
+        renderProjectHeader() {
+            addTasksHeader('Project:', arguments[2]);
+        },
+
+        renderBasicHeader() {
+            const header = "So let's go";
+            addTasksHeader(undefined,header);
         },
 
         templatesController() {
@@ -391,7 +457,7 @@ const templates = (function() {
             templates.renderTasks();
             templates.renderProjects(
                 document.querySelector('.sidebar'),
-                Object.values(projects.getAllProjects())
+                Object.values(projects.getAllProjectsSorted())
             );
         },
 
@@ -406,6 +472,19 @@ const templates = (function() {
 // use project name by default in form to add new tassk
 // imporove reset button logic:
 // depends on page, better show this li back than rerender all
+
+
+// js data library
+// storage
+// refactoring
+
+// form validation, empty name input is prohibited
+
+// show only projects with tasks count > 0
+
+// clickable small project mark
+
+// highlight priority colors
 
 
 

@@ -25,8 +25,8 @@
             <aside class="sidebar">
                 <ul>
                     <li class="active" onclick="eventsController('showAllTasks')"><a class="all" href="#">Everything</a><span class="count">10</span></li>
-                    <li><a class="today" href="#">Today</a><span class="count">5</span></li>
-                    <li><a class="week" href="#">This Week</a><span class="count">1</span></li>
+                    <li onclick="eventsController('showTodayTasks')"><a class="today" href="#">Today</a><span class="count">5</span></li>
+                    <li onclick="eventsController('showWeekTasks')"><a class="week" href="#">Next Week</a><span class="count">1</span></li>
                 </ul>
                 <h4>Projects</h4>
                 <!-- <ul>
@@ -37,7 +37,7 @@
                 <a href="#" class="new-project"><span class="red-plus">+</span> <span>New Project</span></a> -->
             </aside>
             <main class="main-content">
-                <h2>So let's start</h2>
+                <!-- <h2>So let's start</h2> -->
                 <!-- <ul class="todos">
                     <li>
                         <span class="task-check"><input type="checkbox" name="" data-id="" checked></span>

@@ -66,7 +66,8 @@ a {
 }
 
 .sidebar {
-    background-color: bisque;
+    background-color: rgb(28, 28, 28);
+    color: #fff
 }
 
 .sidebar ul {
@@ -87,15 +88,15 @@ a {
 }
 
 .sidebar ul li.active {
-    background-color: #ccc;
+    background-color: rgb(56, 56, 56);
 }
 
 .sidebar ul li:hover {
-    background-color: #ccc;
+    background-color: rgb(56, 56, 56);
 }
 
 .sidebar ul li a {
-    color: #000;
+    color: #fff;
     /* border-bottom: 1px dotted #ccc; */
     font-weight: 300;
 }
@@ -199,9 +200,22 @@ ul.todos li.todo-form form {
     display: inline-block;
     padding: 5px;
     text-align: center;
-    background-color: red;
     grid-column: -3/-2;
 }
+
+.todos .task-priority.low {
+    background-color: lightgreen;
+}
+
+.todos .task-priority.medium {
+    background-color: goldenrod;
+}
+
+.todos .task-priority.high {
+    background-color: lightcoral;
+}
+
+
 
 ul.todos li::after {
     content: '';
@@ -307,7 +321,7 @@ input[type="text"].project {
     display: block;
     width: 1.5rem;
     height: 1.5rem;
-    background-color: black;
+    background-color: grey;
     margin: 5px;
 }
 

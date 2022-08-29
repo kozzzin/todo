@@ -27,10 +27,31 @@ const tasksStorage = (function() {
             }
         },
 
+        getTasksByDate(date) {
+            const tasksArray = Array.from(Object.values(tasksStorage));
+            if (date == 'today') {
+                date = helpers.todayDate();
+                return tasksArray.filter(task => task.due == date);
+
+            } else if (date == 'week') {
+                const minDate = new Date(helpers.todayDate());
+                minDate.setHours(0,0,0,0);
+                const maxDate = new Date(Date.parse(minDate) + (1000 * 60 * 60 * 24 * 7));
+
+                return tasksArray.filter(task => {
+                    const taskDue = new Date(task.due);
+                    taskDue.setHours(0,0,0,0);
+                    return minDate <= taskDue && taskDue < maxDate;
+                });
+            }
+        },
+
         loadAllTasks() {
             return tasksStorage;
             // ret
-        }
+        },
+
+
     }
 })();
 
@@ -90,6 +111,17 @@ const projects = (function() {
             if (projectsStorage[name]) {
                 delete projectsStorage[name];
             }
+        },
+
+        getAllProjectsSorted() {
+            // alphabetically sorted
+            const keysArr = Object.keys(projectsStorage).sort();
+            const result = keysArr.reduce((acc,key) => {
+
+                acc.push(projectsStorage[key]);
+                return acc;
+            },[]);
+            return result;
         },
 
         getAllProjects() {
