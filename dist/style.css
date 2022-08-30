@@ -140,6 +140,7 @@ a {
 
 .main-content {
     background-color: #fff;
+    overflow: auto;
 }
 
 .main-content h2 {

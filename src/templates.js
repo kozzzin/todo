@@ -1,5 +1,6 @@
 const { priorities, projects, tasksStorage  } = require('./tasks') ;
 const { helpers } = require('./helpers');
+const { formatDistance } = require('date-fns');
 
 const templates = (function() {
 
@@ -9,10 +10,42 @@ const templates = (function() {
         })
     }
 
+    function chooseActiveLink(event,target) {
+        if (target == undefined) {
+            target = event.target;
+
+            console.log(target);
+    
+            while (target.nodeName.toLowerCase() != 'li') {
+                target = target.parentNode;
+            }
+        }
+
+
+        const li = document.querySelectorAll('.nav li');
+        li.forEach(li => {
+            if (li.classList.contains('active')) {
+                li.classList.remove('active');
+            }
+        });
+
+        target.classList.add('active');
+
+    }
+
+    function updateTimeFilterCounters() {
+        const allCount = document.querySelector('.all-li .count');
+        allCount.innerHTML = Array.from(Object.keys(tasksStorage.loadAllTasks())).length;
+        const todayCount = document.querySelector('.today-li .count');
+        todayCount.innerHTML = tasksStorage.getTasksByDate('today').length;
+        const weekCount = document.querySelector('.week-li .count');
+        weekCount.innerHTML = tasksStorage.getTasksByDate('week').length;
+    }
+
     function projectList(target, projects) {
         const ul = document.createElement('ul');
         ul.setAttribute('id','projects');
-        ul.className = 'projects-list';
+        ul.classList.add('nav', 'projects-list');
         projects.forEach(project => {
             const li = document.createElement('li');
             setAttributes(li, {
@@ -21,8 +54,11 @@ const templates = (function() {
                 [
                     document.querySelector('.main-content'),
                     projects.getTasksOfProject('${project.name}'),
-                    '${project.name}'
-                ])`
+                    '${project.name}',
+                    event
+                ]);
+                eventsController('linkClick',event)
+                `
             });
             const a = document.createElement('a');
             a.className = project.name;
@@ -95,14 +131,39 @@ const templates = (function() {
 
             const taskDate = document.createElement('span');
             taskDate.className = 'task-date';
-            taskDate.innerText = task.due;
+
+            if (task.due) {
+                const dueDate = new Date(task.due);
+                dueDate.setHours(23,59);
+    
+                taskDate.innerText = 'Deadline: ' + formatDistance(
+                    new Date(dueDate),
+                    Date.now(),
+                    {addSuffix:true}
+                );
+            } else {
+                taskDate.innerText = '';
+            }
+
+
             taskExtras.appendChild(taskDate);
 
             if (task.proj != undefined) {
                 const taskProject = document.createElement('span');
                 taskProject.className = 'task-project';
                 const taskProjectLink = document.createElement('a');
-                taskProjectLink.setAttribute('href','');
+                setAttributes(taskProjectLink,
+                    {
+                        'href':'#',
+                        'onclick': `eventsController('projectClick',
+                        [
+                            document.querySelector('.main-content'),
+                            projects.getTasksOfProject('${task.proj}'),
+                            '${task.proj}',
+                            event
+                        ]);
+                        eventsController('linkClick',{event:event,target:document.querySelector('.${task.proj}')})`
+                    });
                 taskProjectLink.innerText = task.proj;
                 taskProject.appendChild(taskProjectLink);
                 taskExtras.appendChild(taskProject);
@@ -116,13 +177,10 @@ const templates = (function() {
             imgsDiv.className = 'task-edit'
             const imgs = '<a onclick="eventsController(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventsController(\'deleteTaskClick\',event)" class="link-task-delete"></a>';
 
-            // 'data-id': task.id,
-            // 'onclick': 'editTask(event)'
 
             imgsDiv.innerHTML = imgs;
 
             li.appendChild(imgsDiv);
-
             ul.appendChild(li);
 
         });
@@ -170,11 +228,7 @@ const templates = (function() {
         
         }
 
-        console.log(date);
-        console.log(today);
-
         // form generator 
-
         const liForm = document.createElement('li');
         liForm.className = 'todo-form';
 
@@ -254,7 +308,20 @@ const templates = (function() {
         if (edit) {
             taskProjectAddInput.setAttribute('value',project);
         } else {
-            taskProjectAddInput.setAttribute('placeholder',project);
+            const activeProject = document.querySelectorAll('#projects li');
+            let projValue;
+            activeProject.forEach(pro => {
+                if (pro.classList.contains('active')) {
+                    projValue = pro.getAttribute('data-name');
+                    return;
+                }
+            });
+            if (projValue) {
+                taskProjectAddInput.setAttribute('value',projValue);
+            } else {
+                taskProjectAddInput.setAttribute('placeholder',project);  
+            }
+            
         }
 
         taskProjectAddLabel.appendChild(taskProjectAddInput);
@@ -278,15 +345,14 @@ const templates = (function() {
         taskButtons.className = 'task-edit-buttons';
         if (!edit) {
             taskButtons.innerHTML = `
-            <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button> 
-            <button  onclick="eventsController('showAllTasks')" type="reset" class="cancel">Cancel</button>`;
+            <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button>`;
             // depends on page, better show this li back than rerender all
         } else {
-            console.log(edit);
             taskButtons.innerHTML = `
-            <button type="submit" class="save" onclick="eventsController('formSubmit',[event,true])">Save</button> 
-            <button onclick="eventsController('showAllTasks')" type="reset" class="cancel">Cancel</button>`;
+            <button type="submit" class="save" onclick="eventsController('formSubmit',[event,true])">Save</button> `;
         }
+
+        taskButtons.innerHTML += '<button onclick="eventsController(\'showAllTasks\')" type="reset" class="cancel">Cancel</button>';
         
 
         // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
@@ -294,7 +360,6 @@ const templates = (function() {
 
         form.append(taskCheck,taskName,taskPriority,taskExtras,taskButtons);
 
-        console.log(form);
         liForm.append(form);
         
         return liForm;
@@ -328,17 +393,26 @@ const templates = (function() {
         h2.innerText += ' ' + header;
     }
 
+
+
    
 
     return {
         renderProjects(target, projects) {
             // projects = Object.keys(projects);
             // // projects.sort((a,b) => a - b);
-            // console.log(projects);
             projectList(target, projects);
-        },   
+            updateTimeFilterCounters();
+        },
+
+        renderSidebar(target,projects) {
+
+        },
         
         renderTasks(target,tasks) {
+
+            console.log(target,tasks);
+
             if (tasks === undefined) {
                 tasks = Object.values(tasksStorage.loadAllTasks());
             }
@@ -359,8 +433,6 @@ const templates = (function() {
 
             tasks = tasksStorage.getTasksByDate('today');
 
-            console.log('tasks ---> ', tasks);
-
             addTasksHeader('Due date: ', 'today');
 
             tasksList(target, tasks);
@@ -376,8 +448,6 @@ const templates = (function() {
             }
 
             tasks = tasksStorage.getTasksByDate('week');
-
-            console.log('tasks ---> ', tasks);
 
             addTasksHeader('Due date: ', 'next week');
 
@@ -399,6 +469,14 @@ const templates = (function() {
 
         hideForm() {
 
+        },
+
+        renderActivelink(event) {
+            chooseActiveLink(event);
+        },
+
+        updateCounter() {
+            updateTimeFilterCounters();
         },
 
         renderProjectHeader() {
@@ -468,23 +546,21 @@ const templates = (function() {
 
 
 
-// change header when render project page
-// use project name by default in form to add new tassk
+// make current variable, to track where are you
+// have trouble: when edit in everywhere, switch to project, but want yo render back current pagw
+// problem with rendering in project after saving
+
 // imporove reset button logic:
 // depends on page, better show this li back than rerender all
 
 
-// js data library
-// storage
+
+// storage // implement storage
 // refactoring
 
 // form validation, empty name input is prohibited
 
-// show only projects with tasks count > 0
-
-// clickable small project mark
-
-// highlight priority colors
+// implement dates library ?? what else? do we need comparison functionss
 
 
 

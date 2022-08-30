@@ -1,28 +1,6 @@
 const { createTask, tasksStorage, projects } = require('./tasks');
 const { templates } = require('./templates');
 const { eventAggregator } = require('./events');
-import { formatDistance, subDays } from 'date-fns'
-
-const testDAte = formatDistance(subDays(new Date(), -3), new Date(), { addSuffix: true });
-
-
-
-
-
-const dateNow = Date.now();
-// dateNow.setTime(0);
-
-// console.log(dateNow.getHours());
-
-// const dateParse = Date.parse('2022-05-11');
-// console.log(dateParse)
-// console.log(new Date(dateParse).getMonth()+1);
-
-// console.log(testDAte)
-//=> "3 days ago"
-
-
-console.log('huy na!');
 
 
 const task = createTask(
@@ -124,12 +102,8 @@ templates.renderTasks(
 function formSubmit(e,edit=false) {
 
     // form validator, no empty names
+    e.preventDefault();
 
-    console.log('edit ', edit);
-    if (edit) {
-        console.log('edit!!!');
-    }
-    console.log(e);
     const form = document.querySelector('.todo-new-form');
     // form.preventDefault();
     // form.preventDefault()
@@ -156,8 +130,6 @@ function formSubmit(e,edit=false) {
             formData.get('task-project')
         );
     }
-    
-    console.log(tasksStorage.loadAllTasks());
 
     templates.renderProjects(
         document.querySelector('.sidebar'),
@@ -165,24 +137,14 @@ function formSubmit(e,edit=false) {
     );
     
     
-    templates.renderTasks();
+    templates.renderTasks(
+        undefined,
+        projects.getTasksOfProject(formData.get('task-project'))
+    );
 };
 
 
-templates.templatesController();
-
-// module.exports =  { formSubmit }
-
-
-    // have a trouble when click two times on add form, 
-
-// window.formSubmit = formSubmit;
-// window.renderForm = templates.renderForm;
-// window.renderTasks = templates.renderTasks;
-// window.editTask = templates.editTask;
-// window.deleteTask = templates.deleteTask;
-// window.eventController = eventController;
-
+// templates.templatesController();
 
 window.projects = projects;
 
@@ -195,18 +157,28 @@ function showTodayTasks() {
 
 showTodayTasks();
 
-
-
 eventAggregator.subscribe('formSubmit',formSubmit);
 eventAggregator.subscribe('showAllTasks',templates.renderTasks);
 eventAggregator.subscribe('showAllTasks',templates.renderBasicHeader);
-eventAggregator.subscribe('addTask',templates.renderForm);
-eventAggregator.subscribe('projectClick', templates.renderTasks);
-eventAggregator.subscribe('projectClick', templates.renderProjectHeader);
-eventAggregator.subscribe('editTaskClick', templates.editTask);
-eventAggregator.subscribe('deleteTaskClick', templates.deleteTask);
+
 eventAggregator.subscribe('showTodayTasks', templates.renderTodayTasks);
 eventAggregator.subscribe('showWeekTasks', templates.renderWeekTasks);
+
+eventAggregator.subscribe('addTask',templates.renderForm);
+
+eventAggregator.subscribe('projectClick', templates.renderTasks);
+eventAggregator.subscribe('projectClick', templates.renderProjectHeader);
+
+
+eventAggregator.subscribe('editTaskClick', templates.editTask);
+eventAggregator.subscribe('deleteTaskClick', templates.deleteTask);
+
+
+
+eventAggregator.subscribe('linkClick',templates.renderActivelink);
+
+
+
 
 function eventsController(event,eventArgs) {
     // ...eventArgs

@@ -114,11 +114,12 @@ const projects = (function() {
         },
 
         getAllProjectsSorted() {
-            // alphabetically sorted
+            // alphabetically sorted and not empty projects
             const keysArr = Object.keys(projectsStorage).sort();
             const result = keysArr.reduce((acc,key) => {
-
-                acc.push(projectsStorage[key]);
+                if (projectsStorage[key].length > 0) {
+                    acc.push(projectsStorage[key]);
+                }
                 return acc;
             },[]);
             return result;
