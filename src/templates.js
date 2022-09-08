@@ -563,6 +563,9 @@ const templates = (function() {
 // implement dates library ?? what else? do we need comparison functionss
 
 
+// complete task logic
+// what would be with completed tasks? make them grey, and then user have to delete completed, but we leave completed striked
+
 
 module.exports = { templates }
 
