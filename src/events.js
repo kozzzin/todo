@@ -40,14 +40,14 @@ const eventAggregator = (function() {
 
     return {
         publish(eventName,eventArgs) {
-            if (!helpers.keyInObj(eventName,events)) {
+            if (!events.hasOwnProperty(eventName)) {
                 events[eventName] = new Event(eventName);
             }
             events[eventName].fire(eventArgs);
         },
 
         subscribe(eventName,handler) {
-            if (!helpers.keyInObj(eventName,events)) {
+            if (!events.hasOwnProperty(eventName)) {
                 events[eventName] = new Event();
             }
 

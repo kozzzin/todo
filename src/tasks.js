@@ -1,28 +1,144 @@
 const { helpers } = require('./helpers');
 
+// WE HAVE TO INJECT STORAGES TO Task, Project and other classes. At first they have to now, what is storage and it hasn\t to depend on certain name of storage,
+// maybe it usefull to create one storage class and then implement 2 variations for tasks and projects
+
+// tasks
+// -- storage
+// -- add task
+// -- get task
+// -- delete task
+// -- get all tasks
+
+// FILTERS (for tasks)
+// -- get elements by due date parameter 
+
+class Task {
+    static ID = 0;
+
+    constructor(taskProperties) {
+        this.name = taskProperties.name;
+        this.due = taskProperties.due;
+        this.priority = taskProperties.priority;
+        this.description = taskProperties.description;
+        this.project = this.addToProject(taskProperties.project);
+        this.id = this.getID();
+        this.notDone = true;
+
+        this.registerInStorage();
+    }
+
+    getID() {
+        return this.ID++;
+    }
+
+    registerInStorage() {
+
+    }
+
+    addToProject(project) {
+        project = project.toLowerCase();
+    }
+
+    updateTask() {
+
+    }
+}
+
+// task
+// -- constructor
+// -- -- id
+// -- -- name
+// -- -- description
+// -- -- due date
+// -- -- priority
+// -- -- project
+// -- -- status
+// -- register in projects
+// -- register in storage ? how to implement it
+// -- update task
+// -- delete task ? how and from where
+
+// projects
+// -- storage
+// -- add to storage
+// -- get project
+// -- get all projects somehow sorted
+// -- delete project
+// -- update project
+
+// project
+// -- constructor
+// -- -- tasks of project
+// -- add task
+// -- delete task
+// -- get all tasks
+
+// priorities
+// -- constructor
+// -- -- map of priority names
+// -- get priority by id
+// -- get all priorities with names and IDs
+
+// localStorage
+// -- localStorage constructor
+// -- add / update localstorage key and value
+// -- erase localStorage
+// ??? how we know about keys
+// where we check whether it's empty or not
+// what data we use if it's empty
+// how do we know that saved data is adequate for user                                          
+
+class LocalStorage {
+    constructor() {
+    }
+
+    addKey() {
+    }
+
+    updateKey() {
+
+    }
+
+    eraseKey() {
+
+    }
+
+    eraseAll() {
+
+    }
+}
+
 const tasksStorage = (function() {
-    const tasksStorage = {};
+    let tasksStorage = {};
+    // if (localStorage.getItem('savedTasks')) {
+    //     tasksStorage = JSONlocalStorage.getItem('savedTasks')
+    // } else {
+    //     const jsonObject = JSON.stringify(tasksStorage.loadAllTasks());
+    //     localStorage.setItem('tasks',jsonObject);
+    // }
 
     return {
+
         addToStorage(task) {
             tasksStorage[task.id] = task;
         },
     
         deleteFromStorageById(id) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 delete tasksStorage[id];
             }
 
         },
 
         updateTaskById(id, updObj) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 tasksStorage[id].update(updObj)
             }
         },
 
         getTaskById(id) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 return tasksStorage[id];
             }
         },
