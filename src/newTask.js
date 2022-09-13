@@ -54,7 +54,7 @@ class Task {
 
     constructor(taskProperties) {
         this.name = taskProperties.name;
-        this.due = taskProperties.due;
+        this.due = DueDate.create(taskProperties.due);
         this.priority = taskProperties.priority;
         this.description = taskProperties.description;
         this.project = this.constructor.addToProject(taskProperties.project);
@@ -74,10 +74,18 @@ class Task {
     update(updateObj) {
         // it's important to send project id for update
         // where handle logic of id assigment ???
-        Object.assign(this,updateObj);
+        Array.from(Object.keys(updateObj)).forEach(key => {
+            let value = updateObj[key];
+            switch (key) {
+                case 'due': value = DueDate.create(value);
+                    break;
+                case 'project': value = this.constructor.addToProject(value);
+                    break;
+            }
+            this[key] = value;
+        });
     }
 }
-
 
 
 class Tasks extends Database {
@@ -93,6 +101,7 @@ class Tasks extends Database {
     } 
 }
 
+
 class Filters {
     static byDate(contentObj, date) {
         // FILTER BY DATE
@@ -104,6 +113,30 @@ class Filters {
         return values.filter(val => val.project === projectID);
     }
 }
+
+
+class DateFilter {
+    for(date) {
+        switch (date) {
+            case 'today': new DateFilterToday();
+            break;
+            case 'week': new DateFilterWeek();
+            break;
+            default: new DateFilter();
+        }
+    }
+}
+
+
+class DueDate {
+    static create(date) {
+        const dateArr = date
+            .split('-')
+            .map(el => Number(el));
+        return new Date(dateArr[0],dateArr[1]-1,dateArr[2]);
+    }
+}
+
 
 class Project {
     static ID = 0
@@ -135,6 +168,7 @@ class Project {
         return count;
     }
 }
+
 
 class Projects extends Database {
     static storage = {};
@@ -187,13 +221,13 @@ class Projects extends Database {
         }, []);
     }
 
-    // techincal method using fot sippler testing
-    static resetIDCounter() {
+    // techincal method using fot simpler testing
+    static resetIDsCounter() {
         this.fieldFactory.ID = 0;
     }
 
-
 }
+
 
 class Priorities {
     static mapping = {
