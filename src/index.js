@@ -75,13 +75,6 @@ createTask(
 
 
 
-projects.addProject('biba');
-projects.addProject('zalupka');
-
-
-console.log(Object.keys(projects.getAllProjects()));
-
-
 templates.renderBasicHeader();
 
 // render projects list

@@ -1,6 +1,7 @@
 const { helpers } = require('./helpers');
+const { addDays } = require('date-fns');
 class Database {
-    static storage = {}
+    static storage = {};
     static fieldFactory;
 
     static add(fieldProperties,fieldFactory = this.fieldFactory) {
@@ -43,6 +44,16 @@ class Database {
     static getAll() {
         return this.storage;
     }
+
+    // techincal method using fot simpler testing
+    static resetIDsCounter() {
+        this.fieldFactory.ID = 0;
+    }
+
+    // techincal method using fot simpler testing
+    static resetStorage() {
+        this.fieldFactory.storage = {};
+    }
 }
 
 class Task {
@@ -67,6 +78,9 @@ class Task {
     }
 
     static addToProject(projectName,projectsStorage = Projects) {
+        if (projectName === undefined) {
+            return undefined;
+        }
         const project =  projectsStorage.add(projectName);
         return project.id;
     }
@@ -93,19 +107,38 @@ class Tasks extends Database {
     static fieldFactory = Task;
 
     static filterByDate(date) {
-        return Filters.byDate(this.storage,date);
+        return Filter.byDate(this.storage,date);
     } 
 
     static filterByProject(projectID) {
-        return Filters.byProject(this.storage,projectID);
-    } 
+        return Filter.byProject(this.storage,projectID);
+    }
+    
+    static getSortedByDueDate() {
+        // index page has tasks sorted by due date
+        return Array.from(
+            Object.values(this.storage))
+                .sort((a,b) => a.due-b.due);
+    }
+
+
 }
 
 
-class Filters {
+// class Sort {
+//     static byABC() {
+
+//     }
+
+//     static byDate(content) {
+
+//     }
+// }
+
+
+class Filter {
     static byDate(contentObj, date) {
-        // FILTER BY DATE
-        // MAYBE USE ANOTHER OBJECT FOR DATE while CREATED, FILTERED AND RENDERED!
+        return DateFilter.for(contentObj,date);
     }
 
     static byProject(contentObj,projectID) {
@@ -116,20 +149,73 @@ class Filters {
 
 
 class DateFilter {
-    for(date) {
+    constructor(data) {
+        this.data = data;
+    }
+
+    static for(data,date) {
         switch (date) {
-            case 'today': new DateFilterToday();
+            case 'today': return DateFilterToday.filter(data);
             break;
-            case 'week': new DateFilterWeek();
+            case 'week': return DateFilterWeek.filter(data);
             break;
-            default: new DateFilter();
+            default: return DateFilter.filter(data);
         }
+    }
+
+    static filter(data) {
+        return new this(data).filtered();
+    }
+
+    filtered() {
+        // maybe make tasks sorted by time
+        return Array.from(Object.values(this.data));
+    }
+}
+
+class DateFilterToday extends DateFilter {
+    constructor(data) {
+        super(data);
+    }
+
+    filtered() {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        return Array.from(
+            Object.values(this.data))
+                .filter(el => {
+                    return el.due.toString() == today.toString();
+                }
+        );
+    }
+}
+
+class DateFilterWeek extends DateFilter {
+    constructor(data) {
+        super(data);
+    }
+
+    filtered() {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const weekEnd = addDays(today,6);
+        return Array.from(
+            Object.values(this.data))
+                .filter(el => {
+                    if (el.due >= today && el.due <= weekEnd) {
+                        return true;
+                    }
+                }
+        );
     }
 }
 
 
 class DueDate {
     static create(date) {
+        if (date instanceof Date) {
+            return date;
+        }
         const dateArr = date
             .split('-')
             .map(el => Number(el));
@@ -206,7 +292,7 @@ class Projects extends Database {
         return project;
     }
 
-    static getIDsSortedAlpha() {
+    static getIDsSortedABC() {
         return Object.keys(this.storage).sort(
             (a,b) => {
                 return this.storage[a].name.localeCompare(this.storage[b].name);
@@ -215,16 +301,13 @@ class Projects extends Database {
     }
 
     static getProjectsSorted() {
-        return Array.from(this.getIDsSortedAlpha()).reduce((arr,id) => {
+        return Array.from(this.getIDsSortedABC()).reduce((arr,id) => {
             arr.push(this.getAll()[id]);
             return arr;
         }, []);
     }
 
-    // techincal method using fot simpler testing
-    static resetIDsCounter() {
-        this.fieldFactory.ID = 0;
-    }
+
 
 }
 
@@ -251,17 +334,6 @@ class Priorities {
 
 //maybe create priority class / entity with id and name
 
-
-class Interface {
-    giveProjectsCount() {
-        // have an object, which has name and count
-        // filer empty projects!!!
-    }
-
-    giveDateFilterOptions() {
-        // show all options for search by date
-    }
-}
 
 
 module.exports = { Projects, Tasks, Priorities }
