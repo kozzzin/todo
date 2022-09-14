@@ -1,4 +1,5 @@
 const { priorities, projects, tasksStorage  } = require('./tasks') ;
+const { Projects, Tasks, Priorities } = require('./newTask');
 const { helpers } = require('./helpers');
 const { formatDistance } = require('date-fns');
 

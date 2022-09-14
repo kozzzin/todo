@@ -216,6 +216,9 @@ class DueDate {
         if (date instanceof Date) {
             return date;
         }
+        if (date === undefined) {
+            return undefined;
+        }
         const dateArr = date
             .split('-')
             .map(el => Number(el));
@@ -319,16 +322,16 @@ class Priorities {
         2: 'high'
     }
 
-    add(id,name) {
-        mapping[id] = name;
+    static add(id,name) {
+        this.mapping[id] = name;
     }
 
-    getName(id) {
-        return mapping[id];
+    static getName(id) {
+        return this.mapping[id];
     }
 
-    getAll() {
-        return mapping;
+    static getAll() {
+        return this.mapping;
     }
 }
 
