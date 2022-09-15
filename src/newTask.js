@@ -1,3 +1,5 @@
+// FOR FUTURE: add manager for projects, to delete unused
+
 const { helpers } = require('./helpers');
 const { addDays } = require('date-fns');
 const { compareAsc } = require('date-fns')
@@ -47,7 +49,7 @@ class Database {
     }
 
     static getAllAsArray() {
-        return Array.from(Object.values(this.mapping));
+        return Array.from(Object.values(this.storage));
     }
 
     // techincal method using fot simpler testing
@@ -83,7 +85,7 @@ class Task {
     }
 
     static addToProject(projectName,projectsStorage = Projects) {
-        if (projectName === undefined) {
+        if (projectName === undefined || projectName == ' ') {
             return undefined;
         }
         const project =  projectsStorage.add(projectName);
@@ -223,7 +225,7 @@ class DueDate {
         if (date instanceof Date) {
             return date;
         }
-        if (date === undefined) {
+        if (date === undefined || date == 0) {
             return undefined;
         }
         const dateArr = date

@@ -1,6 +1,10 @@
 // HOW DO WE KNOW, where are we
 // WHICH PAGE IS OPENED NOW
 
+// UPDATE ALL PAGE WHEN TASK IS ADDDED
+
+// EDIT TASK ON PAGE
+
 const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities } = require('./newTask');
 const { formatDistance, format } = require('date-fns');
@@ -12,7 +16,7 @@ class Page {
         this.headerText = this.getHeader();
         this.tasks = this.getTasks(Tasks.getSortedByDueDate());
         this.sidebar;
-
+        console.log(this.tasks)
     }
 
     getHeader() {
@@ -81,7 +85,7 @@ class PageTemplate {
                         ${ProjectView.get(task.project)}
                     </div>
                     <div class="task-edit">
-                        <a onclick="eventsController(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventsController(\'deleteTaskClick\',event)" class="link-task-delete"></a>
+                        <a onclick="eventAggregator.publish(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventAggregator.publish(\'deleteTaskClick\',event)" class="link-task-delete"></a>
                     </div>
                 </li>`;
                 ul.appendChild(li);
@@ -107,9 +111,17 @@ class PageTemplate {
             document.querySelector(target).append(ul);
     }
 
-    static renderForm(target = 'main ul') {
-        const form = Form.create();
-        document.querySelector(target).append(form);
+    static renderForm(target = 'main ul', form = Form.create()) {
+        if (target instanceof HTMLElement) {
+            target.append(form);
+        } else {
+            document.querySelector(target).append(form);
+        }
+    }
+
+    static renderTaskEdit(targetTask,form = Form.edit()) {
+        const targetParent = targetTask.parentNode;
+        targetParent.insertBefore(form, targetTask);
     }
 }
 
@@ -124,6 +136,49 @@ class PageController {
 
     static closeForm() {
         Form.close();
+    }
+
+    static formSubmit(e) {
+        Form.submit(e);
+        Router.for();
+    }
+
+    static formEditSubmit(e) {
+        FormEdit.submit(e);
+        Router.for();
+    }
+
+    static deleteTask(e) {
+        let target = e.target;
+        while(target.getAttribute('data-id') == null) {
+            target = target.parentNode;
+        }
+
+        const id = target.getAttribute('data-id');
+
+        Tasks.deleteByID(id);
+        Router.for();
+    }
+
+    static editTask(e) {
+        let target = e.target;
+        while(target.getAttribute('data-id') == null) {
+            target = target.parentNode;
+        }
+
+        const id = target.getAttribute('data-id');
+
+        PageTemplate.renderTaskEdit(target,Form.edit(Tasks.getByID(id)));
+
+        try {
+            target.remove();
+        } catch {
+
+        }
+
+        // BIG TROUBLE: AFTER CANCELATION, WE HAVE TO GET OUR TASK BACK
+        // MAKE PAGE REFRESH
+        // NEXT QUESTION IS, WHICH PAGE WE HAVE TO RELOAD!
     }
 }
 
@@ -238,13 +293,22 @@ class TaskController {
 // Whete it has to be controlled
 
 class Form {
+    constructor(taskObj) {
+        if (taskObj !== undefined) {
+            this.name = taskObj.name;
+            this.project = taskObj.project;
+            this.due = taskObj.due;
+            this.id = taskObj.id;
+            this.priority = taskObj.priority;
+        }
+    }
 
     static create(blah) {
-        return new Form(blah).create(blah);
+        return new Form(blah).create();
     }
 
     static edit(blah) {
-        return new FormEdit(blah).edit(blah);
+        return new FormEdit(blah).create();
     }
 
     static close() {
@@ -254,20 +318,75 @@ class Form {
         }
     }
 
+    static submit(e) {
+            const formData = this.getFormData();
+            this.saveNewTask(formData);
+    }
+
+    static saveNewTask(formData) {
+        Tasks.add({
+            name: formData.get('task-name'),
+            due: formData.get('task-date'),
+            priority: formData.get('task-priority'),
+            description: '',
+            project: formData.get('task-project')
+        });
+    }
+
+    static getFormData() {
+        // form validator, no empty names
+            //e.preventDefault();
+        const form = document.querySelector('.todo-new-form');
+        const formData = new FormData(document.querySelector('form'));
+        const id = form.getAttribute('data-id');
+        formData.id = id;
+        return formData;
+    }
+
+    checkUndefined(value) {
+        if (value === undefined) {
+            return "";
+        }
+        return value;
+    }
+
+    getPredefinedValues() {
+        if (this.id === undefined) {
+            return {
+                id: undefined,
+                name: undefined,
+                priority: undefined,
+                project: undefined,
+                due: undefined
+            }
+        } else {
+            return {
+                id: this.id,
+                name: this.name,
+                priority: this.priority,
+                project: this.project,
+                due: this.due
+            }
+        }
+    }
+
     create() {
         Form.close();
+
+        const predefined = this.getPredefinedValues();
+
         const liForm = document.createElement('li');
         liForm.className = 'todo-form';
         liForm.innerHTML = `
-                <form class="todo-new-form" method="post">
+                <form class="todo-new-form" method="post" data-id="${predefined.id}">
                     <span class="task-check"></span>
-                        ${this.getNameInput()}
+                        ${this.getNameInput(predefined.name)}
                     <span class="task-priority-edit">
-                        ${this.getPrioritySelector()}
+                        ${this.getPrioritySelector(predefined.priority)}
                     </span>
                     <div class="task-extras">
-                        ${this.getDateInput()}
-                        ${this.getProjectsSelector()}
+                        ${this.getDateInput(predefined.due)}
+                        ${this.getProjectsSelector(predefined.project)}
                     </div>
                     ${this.getButtons()}
                 </form>
@@ -275,24 +394,29 @@ class Form {
         return liForm;
     }
 
-    getPrioritySelector() {
-        const prioritiesList = Priorities.ge;
+    getPrioritySelector(priorityID) {
+        let prioritiesList = Priorities.getAllAsArray();
+        prioritiesList = 
+            prioritiesList.map(priority => {
+                return `
+                <option ${priorityID == priority.id ? "selected=\"true\"" : ""} value="${priority.id}">${priority.name}</option>`;
+            })
+            .join('\n');
         return `
             <label>Priority<select name="task-priority">
-                <option value="0">low</option>
-                <option value="1">medium</option>
-                <option value="2">high</option>
+                ${prioritiesList}
             </select></label>`;
     }
 
-    getProjectsSelector() {
+    getProjectsSelector(projectID) {
+        const currentProj = projectID === undefined ? undefined : Projects.getByID(projectID).name;
         const projectsOptions = Projects.getProjectsSorted()
             .map(project => {
-                return `<option>${project.name}</option>`
+                return `<option value="${project.name}"></option>`
             }).join('\n');
         return `
             <span class="task-project">
-                <label>Project: <input type="text" list="project" class="project" name="task-project" placeholder="Add to Project"></label>
+                <label>Project: <input type="text" list="project" class="project" name="task-project" value="${this.checkUndefined(currentProj)}" placeholder="Add to Project"></label>
                 <datalist id="project">
                     ${projectsOptions}
                 </datalist>
@@ -300,180 +424,34 @@ class Form {
     }
 
     getDateInput(date) {
-        date = date === undefined ? new Date() : date;
+        const dateSelected = date === undefined ? '' : format(date,'yyyy-MM-dd');
         // IT'S Question, whether it is good or bad idea to select due date as today
         return `
             <span class="task-date">
-                <label>Deadline: <input type="date" name="task-date" value="${format(date,'yyyy-MM-dd')}" min="${format(date,'yyyy-MM-dd')}">
+                <label>Deadline: <input type="date" name="task-date" value="${dateSelected}" min="${format(new Date(),'yyyy-MM-dd')}">
                 </label>
             </span>`;
     }
 
-    getNameInput() {
+    getNameInput(name) {
         return `
             <span class="task-name">
-                <input type="text" name="task-name" placeholder="To do..." required>
+                <input type="text" name="task-name" value="${this.checkUndefined(name)}" placeholder="To do..." required>
             </span>
         `;
     }
 
     getButtons() {
-        const submitClick = `eventsController('formSubmit',event)`;
+        const submitClick = `eventAggregator.publish('formSubmit',event)`;
         const resetClick = `eventAggregator.publish('closeForm')`;
         return `
             <span class="task-edit-buttons">
-                <button onclick="${submitClick} type="submit" class="save" ">Save</button>
+                <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
                 <button onClick="${resetClick}" type="reset" class="cancel">Cancel</button>
             </span>`;
         //onclick="eventsController('showAllTasks')"
     }
-    //     const form = document.createElement('form');
-    //     form.classList = 'todo-new-form';
-    //     form.setAttribute('data-id',id);
-    //     form.setAttribute('method','post');
 
-    //     const taskCheck = document.createElement('span');
-    //     taskCheck.classList = 'task-check';
-
-    //     const taskName = document.createElement('span');
-    //     taskName.className = 'task-name';
-    //     const nameInput = document.createElement('input');
-    //     setAttributes(nameInput, {
-    //         'type': 'text',
-    //         'name': 'task-name',
-    //         'placeholder': placeholder,
-    //         'value': name
-    //         // 'required': true
-    //     });
-    //     nameInput.required = true;
-
-    //     taskName.appendChild(nameInput);
-
-    //     const taskPriority = document.createElement('span');
-    //     taskPriority.className = 'task-priority-edit';
-    //     const priorLabel = document.createElement('label');
-    //     priorLabel.innerText = 'Priority';
-    //     const priorSelect = document.createElement('select');
-    //     priorSelect.setAttribute('name','task-priority');
-    //     const prioritiesList = priorities.getAllPriorities();
-    //     for (let priorKey of Object.keys(prioritiesList)) {
-    //         const priorOption = document.createElement('option');
-    //         if (priorKey == priority) {
-    //             priorOption.setAttribute('selected','true');
-    //         }
-    //         priorOption.setAttribute('value',priorKey);
-    //         priorOption.innerText = prioritiesList[priorKey];
-    //         priorSelect.appendChild(priorOption);
-    //     }
-        
-    //     priorLabel.appendChild(priorSelect);
-    //     taskPriority.appendChild(priorLabel);
-
-    //     const taskExtras = document.createElement('div');
-    //     taskExtras.className = 'task-extras';
-
-    //     const taskDate = document.createElement('span');
-    //     taskDate.className = 'task-date';
-    //     const dateLabel = document.createElement('label');
-    //     dateLabel.innerText = 'Deadline: ';
-    //     const taskDateInput = document.createElement('input');
-    //     setAttributes(taskDateInput,{
-    //         type: 'date',
-    //         name: 'task-date',
-    //         value: date,
-    //         min: today
-    //     })
-
-    //     dateLabel.appendChild(taskDateInput);
-    //     taskDate.appendChild(dateLabel);
-        
-
-    //     const taskProjectAdd = document.createElement('span');
-    //     taskProjectAdd.className = 'task-project';
-    //     const taskProjectAddLabel = document.createElement('label');
-    //     taskProjectAddLabel.innerText = 'Project: ';
-    //     const taskProjectAddInput = document.createElement('input');
-    //     setAttributes(taskProjectAddInput, {
-    //        type: 'text',
-    //        list: 'project',
-    //        class: 'project',
-    //        name: 'task-project' 
-    //     });
-
-
-
-    // function createForm(target,id,edit=false) {   
-    //     let name,date,priority,project,placeholder;
-    //     const today = helpers.todayDate();
-
-    //     if (id !== undefined) {
-    //         const task = tasksStorage.getTaskById(id);
-    //         name = task.name;
-    //         date = task.due;
-    //         project = task.proj;
-    //         priority = task.priority;
-    //     } else {
-    //         placeholder = 'To do...';
-    //         name='';
-    //         date = undefined;
-    //         project = 'Add to Project';
-        
-    //     }
-
-    //     // form generator 
-    //     const liForm = document.createElement('li');
-    //     liForm.className = 'todo-form';
-
-
-
-    //     if (edit) {
-    //         taskProjectAddInput.setAttribute('value',project);
-    //     } else {
-    //         const activeProject = document.querySelectorAll('#projects li');
-    //         let projValue;
-    //         activeProject.forEach(pro => {
-    //             if (pro.classList.contains('active')) {
-    //                 projValue = pro.getAttribute('data-name');
-    //                 return;
-    //             }
-    //         });
-    //         if (projValue) {
-    //             taskProjectAddInput.setAttribute('value',projValue);
-    //         } else {
-    //             taskProjectAddInput.setAttribute('placeholder',project);  
-    //         }
-            
-    //     }
-
-    //     taskProjectAddLabel.appendChild(taskProjectAddInput);
-
-    //     const projectDatalist = document.createElement('datalist');
-    //     projectDatalist.setAttribute('id','project');
-
-    //     const projectsList = projects.getAllProjects();
-    //     for (let projKey of Object.keys(projectsList)) {
-    //         const projOption = document.createElement('option');
-    //         projOption.setAttribute('value',projKey);
-    //         // projOption.innerText = prioritiesList[projKey];
-    //         projectDatalist.appendChild(projOption);
-    //     }
-
-    //     taskProjectAdd.append(taskProjectAddLabel,projectDatalist);
-
-    //     taskExtras.append(taskDate,taskProjectAdd);
-
-    //     const taskButtons = document.createElement('span');
-    //     taskButtons.className = 'task-edit-buttons';
-    //     if (!edit) {
-    //         taskButtons.innerHTML = `
-    //         <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button>`;
-    //         // depends on page, better show this li back than rerender all
-    //     } else {
-    //         taskButtons.innerHTML = `
-    //         <button type="submit" class="save" onclick="eventsController('formSubmit',[event,true])">Save</button> `;
-    //     }
-
-    //     taskButtons.innerHTML += '<button onclick="eventsController(\'showAllTasks\')" type="reset" class="cancel">Cancel</button>';
         
 
     //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
@@ -486,60 +464,39 @@ class Form {
     //     return liForm;
     // }
 
-
-    // renderForm(target,id,edit=false) {
-    //     const form = createForm(target,id,edit);
-    //     if (edit) {
-    //         const targetParent = target.parentNode;
-    //         targetParent.insertBefore(form, target);
-    //     } else {
-    //         target.append(form);
-    //     }
-        
-    //     hideAddTaskLink();
-    // },
 }
 
 class FormEdit extends Form {
-    create() {
-        const liForm = document.createElement('li');
-        liForm.className = 'todo-form';
-        liForm.innerHTML = `
-                <form class="todo-new-form" data-id="undefined" method="post">
-                    <span class="task-check"></span>
-                    <span class="task-name">
-                        <input type="text" name="task-name" placeholder="To do..." value="" required="">
-                    </span>
-                    <span class="task-priority-edit">
-                        <label>Priority<select name="task-priority">
-                            <option value="0">low</option>
-                            <option value="1">medium</option>
-                            <option value="2">high</option>
-                        </select></label>
-                    </span>
-                    <div class="task-extras">
-                        <span class="task-date">
-                            <label>Deadline: <input type="date" name="task-date" value="undefined" min="2022-09-15">
-                            </label>
-                        </span>
-                        <span class="task-project">
-                            <label>Project: <input type="text" list="project" class="project" name="task-project" placeholder="Add to Project"></label>
-                            <datalist id="project">
-                                <option value="website"></option>
-                                <option value="laba"></option>
-                                <option value="todays"></option>
-                                <option value="weeks"></option>
-                            </datalist>
-                        </span>
-                    </div>
-                    <span class="task-edit-buttons">
-                        <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button>
-                        <button onclick="eventsController('showAllTasks')" type="reset" class="cancel">Cancel</button>
-                    </span>
-                </form>
-        `;
-        return liForm;
+
+    static submit(e) {
+        const formData = this.getFormData();
+        this.saveEditedTask(formData);
     }
+
+    static saveEditedTask(formData) {
+        Tasks.updateByID(formData.id,
+            {
+                name: formData.get('task-name'),
+                due: formData.get('task-date'),
+                priority: formData.get('task-priority'),
+                description: '',
+                project: formData.get('task-project')
+            }
+        );
+    }
+
+    getButtons() {
+        const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
+        const resetClick = `eventAggregator.publish('reloadPage')`;
+        return `
+            <span class="task-edit-buttons">
+                <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
+                <button onClick="${resetClick}" type="reset" class="cancel">Cancel</button>
+            </span>`;
+        //onclick="eventsController('showAllTasks')"
+    }
+
+
 }
 
 // using templates to render

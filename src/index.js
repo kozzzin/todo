@@ -46,6 +46,11 @@ Router.for();
 // events
 eventAggregator.subscribe('addTask',PageController.renderForm);
 eventAggregator.subscribe('closeForm',PageController.closeForm);
+eventAggregator.subscribe('formSubmit',PageController.formSubmit);
+eventAggregator.subscribe('deleteTaskClick',PageController.deleteTask);
+eventAggregator.subscribe('editTaskClick',PageController.editTask);
+eventAggregator.subscribe('formEditSubmit',PageController.formEditSubmit);
+eventAggregator.subscribe('reloadPage',Router.for);
 
 
 // where to store global state of page, now page is type... name... so use it for new forms
