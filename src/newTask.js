@@ -46,6 +46,10 @@ class Database {
         return this.storage;
     }
 
+    static getAllAsArray() {
+        return Array.from(Object.values(this.mapping));
+    }
+
     // techincal method using fot simpler testing
     static resetIDsCounter() {
         this.fieldFactory.ID = 0;
@@ -318,25 +322,61 @@ class Projects extends Database {
 }
 
 
-class Priorities {
-    static mapping = {
-        0: 'low',
-        1: 'medium',
-        2: 'high'
+class Priority {
+    constructor(id,name) {
+        this.id = id;
+        this.name = name;
     }
 
-    static add(id,name) {
-        this.mapping[id] = name;
+    static create(id,name) {
+        return new this(id,name)
     }
 
-    static getName(id) {
-        return this.mapping[id];
-    }
+    rename(newName) {
+        try {
+            this.name = newName;
+        } catch(e) {
+            console.log('it\'s flaw')
+        }
 
-    static getAll() {
-        return this.mapping;
     }
 }
+
+
+class Priorities extends Database {
+    static fieldFactory = Priority;
+    static storage = Object.assign({},
+        {0: this.fieldFactory.create(0,'low')},
+        {1: this.fieldFactory.create(1,'medium')},
+        {2: this.fieldFactory.create(2,'high')},
+    )
+}
+
+
+
+// class Priorities {
+//     static mapping = {
+//         0: 'low',
+//         1: 'medium',
+//         2: 'high'
+//     }
+
+//     static add(id,name) {
+//         this.mapping[id] = name;
+//     }
+
+//     static getName(id) {
+//         return this.mapping[id];
+//     }
+
+//     static getAll() {
+//         return this.mapping;
+//     }
+
+//     static getAllAsList() {
+//         return Array.from(Object.values(this.mapping));
+//     }
+// }
 
 //maybe create priority class / entity with id and name
 

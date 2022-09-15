@@ -3,7 +3,7 @@
 
 const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities } = require('./newTask');
-const { formatDistance } = require('date-fns');
+const { formatDistance, format } = require('date-fns');
 
 class Page {
     constructor(name,type) {
@@ -33,6 +33,9 @@ class Page {
     }
 }
 
+
+//maybe register elements on pagetemplate or page entity,
+// it would be easer to do: remove this.form
 class PageTemplate {
     constructor(pageObj) {
         this.name = pageObj.name,
@@ -72,7 +75,7 @@ class PageTemplate {
                 li.innerHTML = `
                     <input type="checkbox" name="${task.name}" data-id="${task.id}" ${Checkbox.getValue(task.notDone)}>
                     <span class="task-name">${task.name}</span>
-                    <span class="task-priority ${Priorities.getName(task.priority)}">${Priorities.getName(task.priority)}</span>
+                    <span class="task-priority ${Priorities.getByID(task.priority).name}">${Priorities.getByID(task.priority).name}</span>
                     <div class="task-extras">
                         ${DuedateView.get(task.due)}
                         ${ProjectView.get(task.project)}
@@ -88,7 +91,7 @@ class PageTemplate {
             addTask.className = 'add-task-li';
             addTask.setAttribute(
                 'onclick',
-                'eventsController(\'addTask\',document.querySelector(\'main ul\'))'
+                'eventAggregator.publish(\'addTask\')'
             );
             addTask.innerHTML = `
             <span class="add-task-plus"></span><span class="add-task-text">Add Task</span>`;
@@ -103,10 +106,26 @@ class PageTemplate {
     
             document.querySelector(target).append(ul);
     }
+
+    static renderForm(target = 'main ul') {
+        const form = Form.create();
+        document.querySelector(target).append(form);
+    }
 }
 
 //maybe make whole main block with header and tasks
 
+
+class PageController {
+    // i need to know current page id !
+    static renderForm() {
+        PageTemplate.renderForm();
+    }
+
+    static closeForm() {
+        Form.close();
+    }
+}
 
 class Checkbox {
     static getValue(notDone) {
@@ -228,14 +247,86 @@ class Form {
         return new FormEdit(blah).edit(blah);
     }
 
+    static close() {
+        const formIsHere = document.querySelector('.todo-form');
+        if (formIsHere) {
+            formIsHere.remove();
+        }
+    }
+
     create() {
+        Form.close();
         const liForm = document.createElement('li');
         liForm.className = 'todo-form';
         liForm.innerHTML = `
-        
+                <form class="todo-new-form" method="post">
+                    <span class="task-check"></span>
+                        ${this.getNameInput()}
+                    <span class="task-priority-edit">
+                        ${this.getPrioritySelector()}
+                    </span>
+                    <div class="task-extras">
+                        ${this.getDateInput()}
+                        ${this.getProjectsSelector()}
+                    </div>
+                    ${this.getButtons()}
+                </form>
+        `;
+        return liForm;
+    }
+
+    getPrioritySelector() {
+        const prioritiesList = Priorities.ge;
+        return `
+            <label>Priority<select name="task-priority">
+                <option value="0">low</option>
+                <option value="1">medium</option>
+                <option value="2">high</option>
+            </select></label>`;
+    }
+
+    getProjectsSelector() {
+        const projectsOptions = Projects.getProjectsSorted()
+            .map(project => {
+                return `<option>${project.name}</option>`
+            }).join('\n');
+        return `
+            <span class="task-project">
+                <label>Project: <input type="text" list="project" class="project" name="task-project" placeholder="Add to Project"></label>
+                <datalist id="project">
+                    ${projectsOptions}
+                </datalist>
+            </span>`
+    }
+
+    getDateInput(date) {
+        date = date === undefined ? new Date() : date;
+        // IT'S Question, whether it is good or bad idea to select due date as today
+        return `
+            <span class="task-date">
+                <label>Deadline: <input type="date" name="task-date" value="${format(date,'yyyy-MM-dd')}" min="${format(date,'yyyy-MM-dd')}">
+                </label>
+            </span>`;
+    }
+
+    getNameInput() {
+        return `
+            <span class="task-name">
+                <input type="text" name="task-name" placeholder="To do..." required>
+            </span>
         `;
     }
 
+    getButtons() {
+        const submitClick = `eventsController('formSubmit',event)`;
+        const resetClick = `eventAggregator.publish('closeForm')`;
+        return `
+            <span class="task-edit-buttons">
+                <button onclick="${submitClick} type="submit" class="save" ">Save</button>
+                <button onClick="${resetClick}" type="reset" class="cancel">Cancel</button>
+            </span>`;
+        //onclick="eventsController('showAllTasks')"
+    }
     //     const form = document.createElement('form');
     //     form.classList = 'todo-new-form';
     //     form.setAttribute('data-id',id);
@@ -410,7 +501,45 @@ class Form {
 }
 
 class FormEdit extends Form {
-
+    create() {
+        const liForm = document.createElement('li');
+        liForm.className = 'todo-form';
+        liForm.innerHTML = `
+                <form class="todo-new-form" data-id="undefined" method="post">
+                    <span class="task-check"></span>
+                    <span class="task-name">
+                        <input type="text" name="task-name" placeholder="To do..." value="" required="">
+                    </span>
+                    <span class="task-priority-edit">
+                        <label>Priority<select name="task-priority">
+                            <option value="0">low</option>
+                            <option value="1">medium</option>
+                            <option value="2">high</option>
+                        </select></label>
+                    </span>
+                    <div class="task-extras">
+                        <span class="task-date">
+                            <label>Deadline: <input type="date" name="task-date" value="undefined" min="2022-09-15">
+                            </label>
+                        </span>
+                        <span class="task-project">
+                            <label>Project: <input type="text" list="project" class="project" name="task-project" placeholder="Add to Project"></label>
+                            <datalist id="project">
+                                <option value="website"></option>
+                                <option value="laba"></option>
+                                <option value="todays"></option>
+                                <option value="weeks"></option>
+                            </datalist>
+                        </span>
+                    </div>
+                    <span class="task-edit-buttons">
+                        <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button>
+                        <button onclick="eventsController('showAllTasks')" type="reset" class="cancel">Cancel</button>
+                    </span>
+                </form>
+        `;
+        return liForm;
+    }
 }
 
 // using templates to render
@@ -447,4 +576,4 @@ class Render {
 // ------ week
 // ---- Projects' pages (created dynamically)
 
-module.exports = { Router };
+module.exports = { Router, PageController };

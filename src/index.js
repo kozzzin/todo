@@ -1,8 +1,9 @@
 // const { createTask, tasksStorage, projects } = require('./tasks');
 const { templates } = require('./templates');
 const { eventAggregator } = require('./events');
-const { Router } = require('./newTemplates');
+const { Router, PageController } = require('./newTemplates');
 const { Projects, Tasks, Priorities } = require('./newTask');
+
 
 Tasks.add(
     {
@@ -43,4 +44,10 @@ Router.for();
 
 
 // events
-eventAggregator.subscribe('addTask',templates.renderForm);
+eventAggregator.subscribe('addTask',PageController.renderForm);
+eventAggregator.subscribe('closeForm',PageController.closeForm);
+
+
+// where to store global state of page, now page is type... name... so use it for new forms
+
+window.eventAggregator = eventAggregator;
