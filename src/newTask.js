@@ -1,5 +1,6 @@
 const { helpers } = require('./helpers');
 const { addDays } = require('date-fns');
+const { compareAsc } = require('date-fns')
 class Database {
     static storage = {};
     static fieldFactory;
@@ -114,26 +115,28 @@ class Tasks extends Database {
         return Filter.byProject(this.storage,projectID);
     }
     
+    // TROUBLE WITH EMPTY DATES !!!!
     static getSortedByDueDate() {
         // index page has tasks sorted by due date
-        return Array.from(
-            Object.values(this.storage))
-                .sort((a,b) => a.due-b.due);
+        return Sort.byDate(this.storage);
     }
 
 
 }
 
+class Sort {
+    static byDate(content) {
+        if (!Array.isArray(content)) {
+            content = Array.from(Object.values(content));
+        }
+        return content.sort((a,b) => {
+            a = a.due === undefined ? new Date(0) : a.due;
+            b = b.due === undefined ? new Date(0) : b.due;
+            return compareAsc(a,b);
+        });
+    }
+}
 
-// class Sort {
-//     static byABC() {
-
-//     }
-
-//     static byDate(content) {
-
-//     }
-// }
 
 
 class Filter {
@@ -164,7 +167,7 @@ class DateFilter {
     }
 
     static filter(data) {
-        return new this(data).filtered();
+        return Sort.byDate(new this(data).filtered());
     }
 
     filtered() {
@@ -337,6 +340,10 @@ class Priorities {
 
 //maybe create priority class / entity with id and name
 
+
+// BACKLOG
+// maybe add filter on a main page:
+// -- sort by date, priority, project
 
 
 module.exports = { Projects, Tasks, Priorities }

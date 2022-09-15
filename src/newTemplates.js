@@ -9,7 +9,7 @@ class Page {
     constructor(name,type) {
         this.name = name;
         this.type = type;
-        this.header = this.getHeader();
+        this.headerText = this.getHeader();
         this.tasks = this.getTasks(Tasks.getSortedByDueDate());
         this.sidebar;
 
@@ -38,20 +38,19 @@ class PageTemplate {
         this.name = pageObj.name,
         this.type = pageObj.type,
         this.tasks = pageObj.tasks,
-        this.header = pageObj.header;
+        this.headerText = pageObj.headerText;
     }
 
     render() {
-        console.log(this.header);
+        console.log(this.headerText);
         this.renderHeader();
         this.renderTasks();
-        // render header
         // render sidebar
         // render tasks
     }
 
     renderHeader(target = '.main-content', element = 'h2') {
-        this.header = helpers.capitalizer(this.header);
+        this.headerText = helpers.capitalizer(this.headerText);
         let h2 = document.querySelector(element);
         if (h2) {
             h2.innerText = '';
@@ -60,7 +59,7 @@ class PageTemplate {
             document.querySelector(target).appendChild(h2);
         }
         
-        h2.innerText = this.header;    
+        h2.innerText = this.headerText;    
     }
 
     renderTasks(target = '.main-content') {
@@ -70,8 +69,8 @@ class PageTemplate {
             this.tasks.forEach((task) => {
                 const li = document.createElement("li");
                 li.setAttribute('data-id',task.id);
-                li.innerHTML = 
-                `<input type="checkbox" name="${task.name}" data-id="${task.id}" ${Checkbox.getValue(task.notDone)}>
+                li.innerHTML = `
+                    <input type="checkbox" name="${task.name}" data-id="${task.id}" ${Checkbox.getValue(task.notDone)}>
                     <span class="task-name">${task.name}</span>
                     <span class="task-priority ${Priorities.getName(task.priority)}">${Priorities.getName(task.priority)}</span>
                     <div class="task-extras">
@@ -83,7 +82,6 @@ class PageTemplate {
                     </div>
                 </li>`;
                 ul.appendChild(li);
-    
             });
 
             const addTask = document.createElement('li');
@@ -94,7 +92,7 @@ class PageTemplate {
             );
             addTask.innerHTML = `
             <span class="add-task-plus"></span><span class="add-task-text">Add Task</span>`;
-    
+
             ul.appendChild(addTask);
     
             try {
@@ -104,10 +102,10 @@ class PageTemplate {
             }
     
             document.querySelector(target).append(ul);
-
-
     }
 }
+
+//maybe make whole main block with header and tasks
 
 
 class Checkbox {
@@ -115,9 +113,9 @@ class Checkbox {
         if (notDone === false) {
             return 'checked';
         }
+        return '';
     }
 }
-
 
 // make class views, and use common method get, if empty then ...
 class DuedateView {               
@@ -142,14 +140,14 @@ class ProjectView {
     static get(projectID) {
         if (projectID != undefined) {
             return `
-            <span class="task-project"><a href="#" onclick="eventsController('projectClick',
+            <span class="task-project">Project: <a href="#" onclick="eventsController('projectClick',
                 [
                     document.querySelector('.main-content'),
-                    projects.getTasksOfProject('laba'),
-                    'laba',
+                    projects.getTasksOfProject('${Projects.getByID(projectID).name}'),
+                    '${Projects.getByID(projectID).name}',
                     event
                 ]);
-                eventsController('linkClick',{event:event,target:document.querySelector('.laba')})">
+                eventsController('linkClick',{event:event,target:document.querySelector('.${Projects.getByID(projectID).name}')})">
                 ${Projects.getByID(projectID).name}</a></span>`;
                 // it could be beter: projectFilterClick, {passed arguments: project id or name}
         }
@@ -217,11 +215,201 @@ class TaskController {
     //add
 }
 
+// WHere should be a form render
+// Whete it has to be controlled
+
 class Form {
 
+    static create(blah) {
+        return new Form(blah).create(blah);
+    }
+
+    static edit(blah) {
+        return new FormEdit(blah).edit(blah);
+    }
+
+    create() {
+        const liForm = document.createElement('li');
+        liForm.className = 'todo-form';
+        liForm.innerHTML = `
+        
+        `;
+    }
+
+    //     const form = document.createElement('form');
+    //     form.classList = 'todo-new-form';
+    //     form.setAttribute('data-id',id);
+    //     form.setAttribute('method','post');
+
+    //     const taskCheck = document.createElement('span');
+    //     taskCheck.classList = 'task-check';
+
+    //     const taskName = document.createElement('span');
+    //     taskName.className = 'task-name';
+    //     const nameInput = document.createElement('input');
+    //     setAttributes(nameInput, {
+    //         'type': 'text',
+    //         'name': 'task-name',
+    //         'placeholder': placeholder,
+    //         'value': name
+    //         // 'required': true
+    //     });
+    //     nameInput.required = true;
+
+    //     taskName.appendChild(nameInput);
+
+    //     const taskPriority = document.createElement('span');
+    //     taskPriority.className = 'task-priority-edit';
+    //     const priorLabel = document.createElement('label');
+    //     priorLabel.innerText = 'Priority';
+    //     const priorSelect = document.createElement('select');
+    //     priorSelect.setAttribute('name','task-priority');
+    //     const prioritiesList = priorities.getAllPriorities();
+    //     for (let priorKey of Object.keys(prioritiesList)) {
+    //         const priorOption = document.createElement('option');
+    //         if (priorKey == priority) {
+    //             priorOption.setAttribute('selected','true');
+    //         }
+    //         priorOption.setAttribute('value',priorKey);
+    //         priorOption.innerText = prioritiesList[priorKey];
+    //         priorSelect.appendChild(priorOption);
+    //     }
+        
+    //     priorLabel.appendChild(priorSelect);
+    //     taskPriority.appendChild(priorLabel);
+
+    //     const taskExtras = document.createElement('div');
+    //     taskExtras.className = 'task-extras';
+
+    //     const taskDate = document.createElement('span');
+    //     taskDate.className = 'task-date';
+    //     const dateLabel = document.createElement('label');
+    //     dateLabel.innerText = 'Deadline: ';
+    //     const taskDateInput = document.createElement('input');
+    //     setAttributes(taskDateInput,{
+    //         type: 'date',
+    //         name: 'task-date',
+    //         value: date,
+    //         min: today
+    //     })
+
+    //     dateLabel.appendChild(taskDateInput);
+    //     taskDate.appendChild(dateLabel);
+        
+
+    //     const taskProjectAdd = document.createElement('span');
+    //     taskProjectAdd.className = 'task-project';
+    //     const taskProjectAddLabel = document.createElement('label');
+    //     taskProjectAddLabel.innerText = 'Project: ';
+    //     const taskProjectAddInput = document.createElement('input');
+    //     setAttributes(taskProjectAddInput, {
+    //        type: 'text',
+    //        list: 'project',
+    //        class: 'project',
+    //        name: 'task-project' 
+    //     });
+
+
+
+    // function createForm(target,id,edit=false) {   
+    //     let name,date,priority,project,placeholder;
+    //     const today = helpers.todayDate();
+
+    //     if (id !== undefined) {
+    //         const task = tasksStorage.getTaskById(id);
+    //         name = task.name;
+    //         date = task.due;
+    //         project = task.proj;
+    //         priority = task.priority;
+    //     } else {
+    //         placeholder = 'To do...';
+    //         name='';
+    //         date = undefined;
+    //         project = 'Add to Project';
+        
+    //     }
+
+    //     // form generator 
+    //     const liForm = document.createElement('li');
+    //     liForm.className = 'todo-form';
+
+
+
+    //     if (edit) {
+    //         taskProjectAddInput.setAttribute('value',project);
+    //     } else {
+    //         const activeProject = document.querySelectorAll('#projects li');
+    //         let projValue;
+    //         activeProject.forEach(pro => {
+    //             if (pro.classList.contains('active')) {
+    //                 projValue = pro.getAttribute('data-name');
+    //                 return;
+    //             }
+    //         });
+    //         if (projValue) {
+    //             taskProjectAddInput.setAttribute('value',projValue);
+    //         } else {
+    //             taskProjectAddInput.setAttribute('placeholder',project);  
+    //         }
+            
+    //     }
+
+    //     taskProjectAddLabel.appendChild(taskProjectAddInput);
+
+    //     const projectDatalist = document.createElement('datalist');
+    //     projectDatalist.setAttribute('id','project');
+
+    //     const projectsList = projects.getAllProjects();
+    //     for (let projKey of Object.keys(projectsList)) {
+    //         const projOption = document.createElement('option');
+    //         projOption.setAttribute('value',projKey);
+    //         // projOption.innerText = prioritiesList[projKey];
+    //         projectDatalist.appendChild(projOption);
+    //     }
+
+    //     taskProjectAdd.append(taskProjectAddLabel,projectDatalist);
+
+    //     taskExtras.append(taskDate,taskProjectAdd);
+
+    //     const taskButtons = document.createElement('span');
+    //     taskButtons.className = 'task-edit-buttons';
+    //     if (!edit) {
+    //         taskButtons.innerHTML = `
+    //         <button type="submit" class="save" onclick="eventsController('formSubmit',event)">Save</button>`;
+    //         // depends on page, better show this li back than rerender all
+    //     } else {
+    //         taskButtons.innerHTML = `
+    //         <button type="submit" class="save" onclick="eventsController('formSubmit',[event,true])">Save</button> `;
+    //     }
+
+    //     taskButtons.innerHTML += '<button onclick="eventsController(\'showAllTasks\')" type="reset" class="cancel">Cancel</button>';
+        
+
+    //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
+    //     // IF MAIN HAS PROJECT-ID, THAN USE BY DEFAULT
+
+    //     form.append(taskCheck,taskName,taskPriority,taskExtras,taskButtons);
+
+    //     liForm.append(form);
+        
+    //     return liForm;
+    // }
+
+
+    // renderForm(target,id,edit=false) {
+    //     const form = createForm(target,id,edit);
+    //     if (edit) {
+    //         const targetParent = target.parentNode;
+    //         targetParent.insertBefore(form, target);
+    //     } else {
+    //         target.append(form);
+    //     }
+        
+    //     hideAddTaskLink();
+    // },
 }
 
-class EditForm extends Form {
+class FormEdit extends Form {
 
 }
 
