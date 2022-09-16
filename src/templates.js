@@ -43,6 +43,8 @@ const templates = (function() {
         weekCount.innerHTML = tasksStorage.getTasksByDate('week').length;
     }
 
+
+
     function projectList(target, projects) {
         const ul = document.createElement('ul');
         ul.setAttribute('id','projects');

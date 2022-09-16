@@ -248,7 +248,7 @@ describe('Filters', () => {
                 "project": undefined,
             }
         ];
-        expect(Tasks.filterByDate('week')).toEqual(expected);
+        expect(Tasks.filterByDate('next week')).toEqual(expected);
     });
 });
 

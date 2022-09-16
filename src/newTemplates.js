@@ -2,9 +2,14 @@
 // WHICH PAGE IS OPENED NOW
 
 // NEXT
-// SAVE TASK CHECKMARK, WHEN WE MARK TASK AS COMPLETED
-// SIDEBAR
-// ANOTHER PAGES
+// HOW TO GET BACK ON CURRENT PAGE, AFTER:
+// -- saving form
+// -- saving editing form
+// -- closing form
+
+// !!!! NOW WHEN CLOSING ADDING FORM WE SEMPLY DELETE IT UNDER OTHET LIST ITEMS
+
+// HIGHLIGHT CURRENT LINK, the same question, how do we know, where we are
 
 // AFTER ALL: logic for current page: what to refresh after add and edit
 //, predefined values and so on
@@ -15,13 +20,39 @@ const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities } = require('./newTask');
 const { formatDistance, format } = require('date-fns');
 
+class AppState {
+    static _currentPage = {};
+    static _currentFilter = '';
+
+    static set currentPage(pageObj) {
+        this._currentPage = pageObj;
+        return this._currentPage;
+    }
+
+    static get currentPage() {
+        return this._currentPage;
+    }
+}
+
 class Page {
+    static is(obj) {
+        switch(obj.name) {
+            case 'dateFilter': return FilterPage.create(obj.name,obj.type,obj.filter);
+                break;
+            case 'projectFilter':  return FilterPage.create(obj.name,obj.type,obj.id);
+                break;
+            default: return new this(obj.name,obj.type);
+        }
+
+    }
+
     constructor(name,type) {
         this.name = name;
         this.type = type;
         this.headerText = this.getHeader();
         this.tasks = this.getTasks(Tasks.getSortedByDueDate());
-        this.sidebar;
+        this.dateFilters = this.getDateFilters();
+        this.projectsList = this.getProjectsList();
         console.log(this.tasks)
     }
 
@@ -29,9 +60,19 @@ class Page {
         return Header.for(this.name);
     }
 
-    getSidebar(sidebar) {
-        // use namees for static objects
-        // use filters
+    getDateFilters() {
+        // hardcoded filters id bad idea
+        return ['today','next week'];
+    }
+
+    getProjectsList() {
+        return Projects.getProjectsSorted()
+            .filter(el => {
+                if (Tasks.filterByProject(el.id).length > 0) {
+                    return true;
+                }
+                return false;
+            });
     }
 
     getTasks(source) {
@@ -43,6 +84,51 @@ class Page {
     }
 }
 
+class FilterPage extends Page {
+    constructor(name,type,filter) {
+        super(name,type);
+        this.filterType = filter;
+    }
+
+    static create(name,type,filter) {
+        switch(type) {
+            case 'dateFilter':
+                return new dateFilterPage(name,type,filter);
+                break;
+            case 'projectFilter':
+                return new projectFilterPage(name,type,filter);
+                break;
+        }
+    }
+}
+
+
+class dateFilterPage extends FilterPage {
+    constructor(name,type,filter) {
+        super(name,type,filter);
+        this.tasks = Tasks.filterByDate(filter);
+        this.headerText = this.getHeader();
+    }
+
+    getHeader() {
+        return Header.for(this.name, this.filterType);
+    }
+    
+}
+
+class projectFilterPage extends FilterPage {
+    constructor(name,type,id) {
+        super(name,type,id);
+        this.tasks = Tasks.filterByProject(this.filterType);
+        this.projectName = Projects.getByID(this.filterType).name;
+        this.headerText = this.getHeader();
+    }
+
+    getHeader() {
+        return Header.for(this.name, this.projectName);
+    }
+}  
+
 
 //maybe register elements on pagetemplate or page entity,
 // it would be easer to do: remove this.form
@@ -52,14 +138,18 @@ class PageTemplate {
         this.type = pageObj.type,
         this.tasks = pageObj.tasks,
         this.headerText = pageObj.headerText;
+        this.dateFilters = pageObj.dateFilters;
+        this.projectsList = pageObj.projectsList;
     }
 
     render() {
-        console.log(this.headerText);
         this.renderHeader();
         this.renderTasks();
-        // render sidebar
-        // render tasks
+        this.renderSidebar();
+    }
+
+    renderSidebar(target = '.sidebar') {
+        document.querySelector(target).innerHTML = Sidebar.get(this.dateFilters, this.projectsList);
     }
 
     renderHeader(target = '.main-content', element = 'h2') {
@@ -76,7 +166,6 @@ class PageTemplate {
     }
 
     renderTasks(target = '.main-content') {
-            // dont like links with arguments mess !!!!! register event on each click, to only send one word, but not the poem
             const ul = document.createElement('ul');
             ul.className = 'todos';
             this.tasks.forEach((task) => {
@@ -131,73 +220,22 @@ class PageTemplate {
     }
 }
 
-//maybe make whole main block with header and tasks
 
+class TaskView {
 
-class PageController {
-    // i need to know current page id !
-    static renderForm() {
-        PageTemplate.renderForm();
-    }
-
-    static closeForm() {
-        Form.close();
-    }
-
-    static formSubmit(e) {
-        Form.submit(e);
-        Router.for();
-    }
-
-    static formEditSubmit(e) {
-        FormEdit.submit(e);
-        Router.for();
-    }
-
-    static deleteTask(e) {
-        let target = e.target;
-        while(target.getAttribute('data-id') == null) {
-            target = target.parentNode;
-        }
-
-        const id = target.getAttribute('data-id');
-
-        Tasks.deleteByID(id);
-        Router.for();
-    }
-
-    static editTask(e) {
-        let target = e.target;
-        while(target.getAttribute('data-id') == null) {
-            target = target.parentNode;
-        }
-
-        const id = target.getAttribute('data-id');
-
-        PageTemplate.renderTaskEdit(target,Form.edit(Tasks.getByID(id)));
-
-        try {
-            target.remove();
-        } catch {
-
-        }
-
-        // BIG TROUBLE: AFTER CANCELATION, WE HAVE TO GET OUR TASK BACK
-        // MAKE PAGE REFRESH
-        // NEXT QUESTION IS, WHICH PAGE WE HAVE TO RELOAD!
-    }
-
-    static checkTask(event) {
-        const id = event.target.getAttribute('data-id');
-        const checked = !event.target.checked;
-        Tasks.updateByID(id,{
-            notDone: checked
-        });
-    }
 }
 
-class Checkbox {
 
+class TaskController {
+    //mark completed 
+    //show
+    //edit
+    //add
+}
+
+
+
+class Checkbox {
     static get(name, id, doneStatus) {
         return `
         <input type="checkbox" ${this.onChange()} name="${name}" data-id="${id}" ${this.getValue(doneStatus)}></input>`;
@@ -213,11 +251,8 @@ class Checkbox {
     static onChange() {
         return `onchange="eventAggregator.publish('taskCheckedChange', event)"`;
     }
-
-
 }
 
-// make class views, and use common method get, if empty then ...
 class DuedateView {               
     static get(date) {
                 if (date) {
@@ -255,51 +290,22 @@ class ProjectView {
     }
 }
 
-
-// get page with data // controller
-class Router {
-    static for(page) {
-        switch(page) {
-            case 'datefilter': 1;
-                break;    
-            case 'projectfilter': 1;
-                break;
-            default: return new Page({
-                name: 'index',
-                type: 'index'
-            }).render();
-        }
-    }
-}
-
-// QUESTION ABOUT FORM, we have to create special version of form for each page,
-// if we have this pagem then we use next form for it with/
-// some elements already predefined
-
-
-
-// use this object to render details on page
-
-
-// INTERFACE // CONTROLLER
-
-class Sidebar {
-
-}
-
 class Header {
     constructor(text) {
         this.text = text;
     }
 
-    static for(page) {
+    static for(page, filter) {
         switch(page) {
             // how to render names of dates and projects
-            case 'projectfilter': 1;
+            case 'projectFilter':
+                return new this(`Project: ${filter}`).getText();
                 break;
-            case 'datefilter': 2;
+            case 'dateFilter':
+                return new this(`Due date: ${filter}`).getText();
                 break;
-            default: return new this('So let\'s go').getText();
+            default:
+                return new this('So let\'s go').getText();
         }
     }
 
@@ -308,16 +314,62 @@ class Header {
     }
 }
 
-class TaskController {
-    //mark completed 
-    //show
-    //edit
-    //add
+
+class Sidebar {
+    static get(dateFilters,projectsList) {
+        return `
+            ${this.getBasicNav()}
+            ${this.getDateFilters(dateFilters)}
+            ${this.getProjectsList(projectsList)}
+        `;
+    }
+
+    static getBasicNav() {
+        return `
+        <ul class="nav">
+            <li class="active all-li" onclick="eventAggregator.publish('indexClick')">
+                <a class="all" href="#">Everything</a>
+                <span class="count">${Tasks.getAllAsArray().length}</span>
+            </li>
+        </ul>`
+    }
+
+    static getDateFilters(dateFilters) {
+        dateFilters = dateFilters.map(filter => {
+            return `
+                <li class="today-li" onclick="eventAggregator.publish('dateFilterClick','${filter}');">
+                    <a class="${filter}" href="#">${helpers.capitalizer(filter)}</a>
+                    <span class="count">${Tasks.filterByDate(filter).length}</span>
+                </li>`
+        });
+
+        return `
+        <ul class="nav">
+            <h4>Due date</h4>
+            ${dateFilters.join('\n')}
+        </ul>`
+    }
+
+    static getProjectsList(projectsList) {
+        projectsList = projectsList.map(project => {
+            return `
+                <li data-name="" data-id="${project.id}" onclick="eventAggregator.publish('projectFilterClick','${project.id}');">
+                    <a class="${'project.name'}">${project.name.toUpperCase()}</a>
+                    <span class="count">${project.countTasksInside()}</span>
+                </li>`;
+        })
+        return `
+            <h4>Projects</h4>
+            <ul id="projects" class="nav projects-list">
+                ${projectsList.join('\n')}
+            </ul>
+        `;
+    }
 }
 
-// WHere should be a form render
-// Whete it has to be controlled
-
+// QUESTION ABOUT FORM, we have to create special version of form for each page,
+// if we have this pagem then we use next form for it with/
+// some elements already predefined
 class Form {
     constructor(taskObj) {
         if (taskObj !== undefined) {
@@ -442,7 +494,7 @@ class Form {
             }).join('\n');
         return `
             <span class="task-project">
-                <label>Project: <input type="text" list="project" class="project" name="task-project" value="${currentProj}" placeholder="Add to Project"></label>
+                <label>Project: <input type="text" list="project" class="project" name="task-project" value="${this.checkUndefined(currentProj)}" placeholder="Add to Project"></label>
                 <datalist id="project">
                     ${projectsOptions}
                 </datalist>
@@ -451,7 +503,6 @@ class Form {
 
     getDateInput(date) {
         const dateSelected = date === undefined ? '' : format(date,'yyyy-MM-dd');
-        // IT'S Question, whether it is good or bad idea to select due date as today
         return `
             <span class="task-date">
                 <label>Deadline: <input type="date" name="task-date" value="${dateSelected}" min="${format(new Date(),'yyyy-MM-dd')}">
@@ -477,12 +528,12 @@ class Form {
             </span>`;
     }
 
-    //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
-    //     // IF MAIN HAS PROJECT-ID, THAN USE BY DEFAULT
-
 }
 
 class FormEdit extends Form {
+
+    //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
+    //     // IF MAIN HAS PROJECT-ID, THAN USE BY DEFAULT
 
     static submit(e) {
         const formData = this.getFormData();
@@ -503,7 +554,7 @@ class FormEdit extends Form {
 
     getButtons() {
         const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
-        const resetClick = `eventAggregator.publish('reloadPage')`;
+        const resetClick = `eventAggregator.publish('reloadPage',currentPage());console.log(currentPage())`;
         return `
             <span class="task-edit-buttons">
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
@@ -515,34 +566,121 @@ class FormEdit extends Form {
 }
 
 // using templates to render
-
 // using interface methods to highlight links and so on
 
-
 class Interface {
-    giveProjectsCount() {
-        // have an object, which has name and count
-        // filer empty projects!!!
-    }
-
-    giveDateFilterOptions() {
-        // show all options for search by date
-    }
-}
-
-class Render {
-    static it() {
+    static highlightLink() {
 
     }
 }
 
 
-// PAGES
-// -- index
-// -- filtered
-// ---- Date Filter
-// ------ today
-// ------ week
-// ---- Projects' pages (created dynamically)
+class PageController {
+    // i need to know current page id !
 
-module.exports = { Router, PageController };
+    static useDateFilter(date) {
+        Router.for('dateFilter',date);
+    }
+
+    static useProjectFilter(id) {
+        Router.for('projectFilter',id);
+    }
+
+    static renderForm() {
+        PageTemplate.renderForm();
+    }
+
+    static closeForm() {
+        Form.close();
+    }
+
+    static formSubmit(e) {
+        Form.submit(e);
+        Router.for(AppState.currentPage.name);
+    }
+
+    static formEditSubmit(e) {
+        FormEdit.submit(e);
+        Router.for(AppState.currentPage.name);
+    }
+
+    static deleteTask(e) {
+        let target = e.target;
+        while(target.getAttribute('data-id') == null) {
+            target = target.parentNode;
+        }
+
+        const id = target.getAttribute('data-id');
+
+        Tasks.deleteByID(id);
+        Router.for(AppState.currentPage.name);
+    }
+
+    static dateCLick(event, action,argument) {
+
+    }
+
+    static editTask(e) {
+        let target = e.target;
+        while(target.getAttribute('data-id') == null) {
+            target = target.parentNode;
+        }
+
+        const id = target.getAttribute('data-id');
+
+        PageTemplate.renderTaskEdit(target,Form.edit(Tasks.getByID(id)));
+
+        try {
+            target.remove();
+        } catch {
+
+        }
+
+        // BIG TROUBLE: AFTER CANCELATION, WE HAVE TO GET OUR TASK BACK
+        // MAKE PAGE REFRESH
+        // NEXT QUESTION IS, WHICH PAGE WE HAVE TO RELOAD!
+    }
+
+    static checkTask(event) {
+        const id = event.target.getAttribute('data-id');
+        const checked = !event.target.checked;
+        Tasks.updateByID(id,{
+            notDone: checked
+        });
+    }
+}
+
+
+class Router {
+    static for(page,filter) {
+        switch(page) {
+            case 'dateFilter':
+                AppState.currentPage = 'dateFilter';
+                AppState._currentFilter = filter;
+                return Page.is({
+                    name:'dateFilter',
+                    type:'dateFilter',
+                    filter:filter
+                }).render();
+                break;    
+            case 'projectFilter':
+                AppState.currentPage = 'projectFilter';
+                AppState._currentFilter = filter;
+                return Page.is({
+                    name:'projectFilter',
+                    type:'projectFilter',
+                    id:filter
+                }).render();
+                break;
+            default:
+                AppState.currentPage = 'index';
+                AppState._currentFilter = 0;
+                return Page.is({
+                    name: 'index',
+                    type: 'index'
+                }).render();
+        }
+    }
+}
+
+module.exports = { Router, PageController, AppState };

@@ -152,7 +152,7 @@ class Filter {
 
     static byProject(contentObj,projectID) {
         const values = Object.values(contentObj);
-        return values.filter(val => val.project === projectID);
+        return values.filter(val => val.project == projectID);
     }
 }
 
@@ -166,7 +166,7 @@ class DateFilter {
         switch (date) {
             case 'today': return DateFilterToday.filter(data);
             break;
-            case 'week': return DateFilterWeek.filter(data);
+            case 'next week': return DateFilterWeek.filter(data);
             break;
             default: return DateFilter.filter(data);
         }
@@ -193,6 +193,7 @@ class DateFilterToday extends DateFilter {
         return Array.from(
             Object.values(this.data))
                 .filter(el => {
+                    el.due = el.due === undefined ? 0 : el.due;
                     return el.due.toString() == today.toString();
                 }
         );
