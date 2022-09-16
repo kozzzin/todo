@@ -85,7 +85,7 @@ class Task {
     }
 
     static addToProject(projectName,projectsStorage = Projects) {
-        if (projectName === undefined || projectName == ' ') {
+        if ([undefined,'',' '].includes(projectName)) {
             return undefined;
         }
         const project =  projectsStorage.add(projectName);

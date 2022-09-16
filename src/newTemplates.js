@@ -1,9 +1,15 @@
 // HOW DO WE KNOW, where are we
 // WHICH PAGE IS OPENED NOW
 
-// UPDATE ALL PAGE WHEN TASK IS ADDDED
+// NEXT
+// SAVE TASK CHECKMARK, WHEN WE MARK TASK AS COMPLETED
+// SIDEBAR
+// ANOTHER PAGES
 
-// EDIT TASK ON PAGE
+// AFTER ALL: logic for current page: what to refresh after add and edit
+//, predefined values and so on
+
+// localSTORAGE
 
 const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities } = require('./newTask');
@@ -77,7 +83,7 @@ class PageTemplate {
                 const li = document.createElement("li");
                 li.setAttribute('data-id',task.id);
                 li.innerHTML = `
-                    <input type="checkbox" name="${task.name}" data-id="${task.id}" ${Checkbox.getValue(task.notDone)}>
+                    ${Checkbox.get(task.name, task.id, task.notDone)}
                     <span class="task-name">${task.name}</span>
                     <span class="task-priority ${Priorities.getByID(task.priority).name}">${Priorities.getByID(task.priority).name}</span>
                     <div class="task-extras">
@@ -180,15 +186,35 @@ class PageController {
         // MAKE PAGE REFRESH
         // NEXT QUESTION IS, WHICH PAGE WE HAVE TO RELOAD!
     }
+
+    static checkTask(event) {
+        const id = event.target.getAttribute('data-id');
+        const checked = !event.target.checked;
+        Tasks.updateByID(id,{
+            notDone: checked
+        });
+    }
 }
 
 class Checkbox {
+
+    static get(name, id, doneStatus) {
+        return `
+        <input type="checkbox" ${this.onChange()} name="${name}" data-id="${id}" ${this.getValue(doneStatus)}></input>`;
+    }
+
     static getValue(notDone) {
         if (notDone === false) {
             return 'checked';
         }
         return '';
     }
+
+    static onChange() {
+        return `onchange="eventAggregator.publish('taskCheckedChange', event)"`;
+    }
+
+
 }
 
 // make class views, and use common method get, if empty then ...
@@ -416,7 +442,7 @@ class Form {
             }).join('\n');
         return `
             <span class="task-project">
-                <label>Project: <input type="text" list="project" class="project" name="task-project" value="${this.checkUndefined(currentProj)}" placeholder="Add to Project"></label>
+                <label>Project: <input type="text" list="project" class="project" name="task-project" value="${currentProj}" placeholder="Add to Project"></label>
                 <datalist id="project">
                     ${projectsOptions}
                 </datalist>
@@ -449,20 +475,10 @@ class Form {
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
                 <button onClick="${resetClick}" type="reset" class="cancel">Cancel</button>
             </span>`;
-        //onclick="eventsController('showAllTasks')"
     }
-
-        
 
     //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
     //     // IF MAIN HAS PROJECT-ID, THAN USE BY DEFAULT
-
-    //     form.append(taskCheck,taskName,taskPriority,taskExtras,taskButtons);
-
-    //     liForm.append(form);
-        
-    //     return liForm;
-    // }
 
 }
 
@@ -493,7 +509,6 @@ class FormEdit extends Form {
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
                 <button onClick="${resetClick}" type="reset" class="cancel">Cancel</button>
             </span>`;
-        //onclick="eventsController('showAllTasks')"
     }
 
 
@@ -515,14 +530,11 @@ class Interface {
     }
 }
 
-
 class Render {
     static it() {
 
     }
 }
-
-
 
 
 // PAGES

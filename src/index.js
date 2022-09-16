@@ -49,6 +49,7 @@ eventAggregator.subscribe('closeForm',PageController.closeForm);
 eventAggregator.subscribe('formSubmit',PageController.formSubmit);
 eventAggregator.subscribe('deleteTaskClick',PageController.deleteTask);
 eventAggregator.subscribe('editTaskClick',PageController.editTask);
+eventAggregator.subscribe('taskCheckedChange',PageController.checkTask);
 eventAggregator.subscribe('formEditSubmit',PageController.formEditSubmit);
 eventAggregator.subscribe('reloadPage',Router.for);
 
