@@ -1,24 +1,33 @@
-// HOW DO WE KNOW, where are we
-// WHICH PAGE IS OPENED NOW
-
-// NEXT
-// HOW TO GET BACK ON CURRENT PAGE, AFTER:
-// -- saving form
-// -- saving editing form
-// -- closing form
-
-// !!!! NOW WHEN CLOSING ADDING FORM WE SEMPLY DELETE IT UNDER OTHET LIST ITEMS
-
-// HIGHLIGHT CURRENT LINK, the same question, how do we know, where we are
-
 // AFTER ALL: logic for current page: what to refresh after add and edit
 //, predefined values and so on
 
 // localSTORAGE
+// read storage if not, use our version
+// then set storage and save there
+// save to storage after each interaction
+// reading storage is priority
+
+// we trying to read localStorage
+// if it's not working or not enough good, clear it
+// if it's empty --> create new one
+// after submit, update, delete --> update local storage
+
+
+
+
+// !!! when click edit while another form is opened, another disapears
+
+// WANT TO HAVE NAMES OF PAGES IN ONE PLACE:
+// because we use them in interface, for routind and so on
+// need to have configure object
+
+
+
 
 const { helpers } = require('./helpers');
-const { Projects, Tasks, Priorities } = require('./newTask');
+const { Projects, Tasks, Priorities, Sort } = require('./newTask');
 const { formatDistance, format } = require('date-fns');
+
 
 class AppState {
     static _currentPage = {};
@@ -31,6 +40,31 @@ class AppState {
 
     static get currentPage() {
         return this._currentPage;
+    }
+}
+
+
+class LocalStorage {
+    static convertThisToJSON(storage) {
+        return JSON.stringify(storage);
+    }
+
+    static convertJSONToObject(key, storage = localStorage) {
+        return JSON.parse(
+            storage.getItem(key)
+        );
+    }
+
+    static getAsDateSortedArray(storage = this.loadObjectFromStorage()) {
+        return Sort.byDate(storage);
+    }
+
+    static saveToLocalStorage(key = 'tasksStorage',object = Tasks.getAll()) {
+        localStorage.setItem(key,this.convertThisToJSON(object));
+    }
+
+    static loadObjectFromStorage(key = 'tasksStorage') {
+        return this.convertJSONToObject(key)
     }
 }
 
@@ -47,10 +81,22 @@ class Page {
     }
 
     constructor(name,type) {
+        /// TEST
+
+        console.log(LocalStorage.getAsDateSortedArray());
+
+        /// END TEST
         this.name = name;
         this.type = type;
         this.headerText = this.getHeader();
-        this.tasks = this.getTasks(Tasks.getSortedByDueDate());
+        // this.tasks = this.getTasks(Tasks.getSortedByDueDate());
+        this.tasks = this.getTasks(
+            Array.from(
+                Object.values(
+                    JSON.parse(localStorage.tasksStorage)
+                )
+            )
+        );
         this.dateFilters = this.getDateFilters();
         this.projectsList = this.getProjectsList();
         console.log(this.tasks)
@@ -146,6 +192,7 @@ class PageTemplate {
         this.renderHeader();
         this.renderTasks();
         this.renderSidebar();
+        Interface.highlightLink();
     }
 
     renderSidebar(target = '.sidebar') {
@@ -274,16 +321,10 @@ class DuedateView {
 class ProjectView {
     static get(projectID) {
         if (projectID != undefined) {
+            const project = Projects.getByID(projectID);
             return `
-            <span class="task-project">Project: <a href="#" onclick="eventsController('projectClick',
-                [
-                    document.querySelector('.main-content'),
-                    projects.getTasksOfProject('${Projects.getByID(projectID).name}'),
-                    '${Projects.getByID(projectID).name}',
-                    event
-                ]);
-                eventsController('linkClick',{event:event,target:document.querySelector('.${Projects.getByID(projectID).name}')})">
-                ${Projects.getByID(projectID).name}</a></span>`;
+            <span class="task-project">Project: <a href="#" onclick="eventAggregator.publish('projectFilterClick','${project.id}');">
+                ${project.name}</a></span>`;
                 // it could be beter: projectFilterClick, {passed arguments: project id or name}
         }
         return '';
@@ -327,8 +368,8 @@ class Sidebar {
     static getBasicNav() {
         return `
         <ul class="nav">
-            <li class="active all-li" onclick="eventAggregator.publish('indexClick')">
-                <a class="all" href="#">Everything</a>
+            <li class="all-li" data-link-id="index" onclick="eventAggregator.publish('indexClick')">
+                <a class="all"  href="#">Everything</a>
                 <span class="count">${Tasks.getAllAsArray().length}</span>
             </li>
         </ul>`
@@ -336,8 +377,9 @@ class Sidebar {
 
     static getDateFilters(dateFilters) {
         dateFilters = dateFilters.map(filter => {
+
             return `
-                <li class="today-li" onclick="eventAggregator.publish('dateFilterClick','${filter}');">
+                <li class="today-li" data-link-id="dateFilter${filter}" onclick="eventAggregator.publish('dateFilterClick','${filter}');">
                     <a class="${filter}" href="#">${helpers.capitalizer(filter)}</a>
                     <span class="count">${Tasks.filterByDate(filter).length}</span>
                 </li>`
@@ -353,7 +395,7 @@ class Sidebar {
     static getProjectsList(projectsList) {
         projectsList = projectsList.map(project => {
             return `
-                <li data-name="" data-id="${project.id}" onclick="eventAggregator.publish('projectFilterClick','${project.id}');">
+                <li data-name="" data-id="${project.id}" data-link-id="projectFilter${project.id}" onclick="eventAggregator.publish('projectFilterClick','${project.id}');">
                     <a class="${'project.name'}">${project.name.toUpperCase()}</a>
                     <span class="count">${project.countTasksInside()}</span>
                 </li>`;
@@ -409,6 +451,7 @@ class Form {
             description: '',
             project: formData.get('task-project')
         });
+        LocalStorage.saveToLocalStorage();
     }
 
     static getFormData() {
@@ -434,7 +477,7 @@ class Form {
                 id: undefined,
                 name: undefined,
                 priority: undefined,
-                project: undefined,
+                project: this.getPredefinedProject(),
                 due: undefined
             }
         } else {
@@ -442,7 +485,7 @@ class Form {
                 id: this.id,
                 name: this.name,
                 priority: this.priority,
-                project: this.project,
+                project: this.getPredefinedProject(),
                 due: this.due
             }
         }
@@ -470,6 +513,16 @@ class Form {
                 </form>
         `;
         return liForm;
+    }
+
+
+    getPredefinedProject() {
+        console.log(typeof AppState._currentFilter);
+        const project = Projects.getByID(AppState._currentFilter);
+        if (project) {
+            return project.id;
+        }
+        return this.project;
     }
 
     getPrioritySelector(priorityID) {
@@ -550,7 +603,11 @@ class FormEdit extends Form {
                 project: formData.get('task-project')
             }
         );
+        // LOCALSTORAGE TEST
+        LocalStorage.saveToLocalStorage();
     }
+
+
 
     getButtons() {
         const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
@@ -570,7 +627,21 @@ class FormEdit extends Form {
 
 class Interface {
     static highlightLink() {
+        const currentFilter =
+            AppState._currentFilter === undefined ?
+                '' : AppState._currentFilter;
+        const link = document.querySelector(`[data-link-id="${AppState._currentPage}${currentFilter}"]`);
 
+        if (link) {
+            link.setAttribute('data-link-active','true');
+        }
+
+    }
+
+
+
+    static unHighlightLink() {
+        
     }
 }
 
@@ -596,12 +667,12 @@ class PageController {
 
     static formSubmit(e) {
         Form.submit(e);
-        Router.for(AppState.currentPage.name);
+        Router.for(AppState._currentPage,AppState._currentFilter);
     }
 
     static formEditSubmit(e) {
         FormEdit.submit(e);
-        Router.for(AppState.currentPage.name);
+        Router.for(AppState._currentPage,AppState._currentFilter);
     }
 
     static deleteTask(e) {
@@ -613,7 +684,8 @@ class PageController {
         const id = target.getAttribute('data-id');
 
         Tasks.deleteByID(id);
-        Router.for(AppState.currentPage.name);
+        LocalStorage.saveToLocalStorage();
+        Router.for(AppState._currentPage,AppState._currentFilter);
     }
 
     static dateCLick(event, action,argument) {
@@ -674,7 +746,7 @@ class Router {
                 break;
             default:
                 AppState.currentPage = 'index';
-                AppState._currentFilter = 0;
+                AppState._currentFilter = undefined;
                 return Page.is({
                     name: 'index',
                     type: 'index'

@@ -87,7 +87,7 @@ a {
     cursor: pointer;
 }
 
-.sidebar ul li.active {
+.sidebar ul li[data-link-active="true"] {
     background-color: rgb(56, 56, 56);
 }
 

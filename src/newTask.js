@@ -22,6 +22,7 @@ class Database {
             return this.storage[id];
         } else {
             this.noIdError();
+            return false;
         }
     }
 
@@ -48,8 +49,8 @@ class Database {
         return this.storage;
     }
 
-    static getAllAsArray() {
-        return Array.from(Object.values(this.storage));
+    static getAllAsArray(storage = this.storage) {
+        return Array.from(Object.values(storage));
     }
 
     // techincal method using fot simpler testing
@@ -224,6 +225,7 @@ class DateFilterWeek extends DateFilter {
 class DueDate {
     static create(date) {
         if (date instanceof Date) {
+            date.setHours(0,0,0,0);
             return date;
         }
         if (date === undefined || date == 0) {
@@ -389,4 +391,4 @@ class Priorities extends Database {
 // -- sort by date, priority, project
 
 
-module.exports = { Projects, Tasks, Priorities }
+module.exports = { Projects, Tasks, Priorities, Sort }
