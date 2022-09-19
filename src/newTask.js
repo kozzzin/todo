@@ -135,11 +135,11 @@ class Sort {
             content = Array.from(Object.values(content));
         }
         return content.sort((a,b) => {
-            // a = a.due === undefined ? new Date(0) : a.due;
-            // b = b.due === undefined ? new Date(0) : b.due;
-            const a1 = a;
-            const b1 = b;
-            return compareAsc(parseISO(a1),parseISO(b1));
+            const tempA = a;
+            const tempB = b;
+            tempA.due = a.due === undefined ? new Date(0) : a.due;
+            tempB.due = b.due === undefined ? new Date(0) : b.due;
+            return compareAsc(tempA.due,tempB.due);
         });
     }
 }
