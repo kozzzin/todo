@@ -1,4 +1,5 @@
 const { priorities, projects, tasksStorage  } = require('./tasks') ;
+const { Projects, Tasks, Priorities } = require('./newTask');
 const { helpers } = require('./helpers');
 const { formatDistance } = require('date-fns');
 
@@ -41,6 +42,8 @@ const templates = (function() {
         const weekCount = document.querySelector('.week-li .count');
         weekCount.innerHTML = tasksStorage.getTasksByDate('week').length;
     }
+
+
 
     function projectList(target, projects) {
         const ul = document.createElement('ul');

@@ -17,6 +17,12 @@ const helpers = (function() {
             let today = new Date();
             today = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
             return today;
+        },
+
+        setAttributes(target, attributes) {
+            Object.keys(attributes).forEach(key => {
+                target.setAttribute(key,attributes[key]);
+            })
         }
         
     }

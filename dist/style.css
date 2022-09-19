@@ -87,7 +87,7 @@ a {
     cursor: pointer;
 }
 
-.sidebar ul li.active {
+.sidebar ul li[data-link-active="true"] {
     background-color: rgb(56, 56, 56);
 }
 
@@ -297,6 +297,14 @@ input[type="checkbox"]:checked::before {
     grid-row: 1/2;
     grid-column: 1/2;
     font-family: 'Exo 2', sans-serif;
+}
+
+li:has(input[type="checkbox"]:checked) {
+    opacity: 0.5;
+}
+
+li:has(input[type="checkbox"]:checked) .task-name {
+    text-decoration: line-through;
 }
 
 input[type="text"] {

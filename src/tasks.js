@@ -1,28 +1,56 @@
 const { helpers } = require('./helpers');
+                                     
+
+class LocalStorage {
+    constructor() {
+    }
+
+    addKey() {
+    }
+
+    updateKey() {
+
+    }
+
+    eraseKey() {
+
+    }
+
+    eraseAll() {
+
+    }
+}
 
 const tasksStorage = (function() {
-    const tasksStorage = {};
+    let tasksStorage = {};
+    // if (localStorage.getItem('savedTasks')) {
+    //     tasksStorage = JSONlocalStorage.getItem('savedTasks')
+    // } else {
+    //     const jsonObject = JSON.stringify(tasksStorage.loadAllTasks());
+    //     localStorage.setItem('tasks',jsonObject);
+    // }
 
     return {
+
         addToStorage(task) {
             tasksStorage[task.id] = task;
         },
     
         deleteFromStorageById(id) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 delete tasksStorage[id];
             }
 
         },
 
         updateTaskById(id, updObj) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 tasksStorage[id].update(updObj)
             }
         },
 
         getTaskById(id) {
-            if (helpers.keyInObj(id,tasksStorage)) {
+            if (tasksStorage.hasOwnProperty(id)) {
                 return tasksStorage[id];
             }
         },
