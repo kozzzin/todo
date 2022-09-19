@@ -42,7 +42,7 @@ class Database {
     }
 
     static noIdError() {
-        console.log('no field with such ID');
+        //console.log('no field with such ID');
     }
 
     static getAll() {

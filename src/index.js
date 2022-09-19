@@ -51,10 +51,12 @@ eventAggregator.subscribe('deleteTaskClick',PageController.deleteTask);
 eventAggregator.subscribe('editTaskClick',PageController.editTask);
 eventAggregator.subscribe('taskCheckedChange',PageController.checkTask);
 eventAggregator.subscribe('formEditSubmit',PageController.formEditSubmit);
+eventAggregator.subscribe('formEditClose',PageController.formEditClose);
 eventAggregator.subscribe('dateFilterClick',PageController.useDateFilter)
 eventAggregator.subscribe('projectFilterClick',PageController.useProjectFilter)
 eventAggregator.subscribe('reloadPage',Router.for);
 eventAggregator.subscribe('indexClick',Router.for);
+
 
 
 // where to store global state of page, now page is type... name... so use it for new forms
