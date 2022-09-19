@@ -2,6 +2,8 @@
 // date problem, it converts zero value to linux zero which iz 1970 year
 // WANT TO HAVE NAMES OF PAGES IN ONE PLACE:
 
+// take care of edit form when new add task form opens
+
 const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities, Sort } = require('./newTask');
 const { formatDistance, format, parseISO } = require('date-fns');
@@ -65,6 +67,7 @@ class LocalStorage {
     static makeSavedStorageCurrent() {
         this.checkLocalStorage();
         Tasks.storage = {};
+        
         const savedStorage = this.loadObjectFromStorage();
         Object.keys(savedStorage).forEach(key => {
             const project = savedStorage[key].project;
@@ -76,7 +79,7 @@ class LocalStorage {
             }
             savedStorage[key].due =
                 savedStorage[key].due === undefined ?
-                    '' : new Date(Date.parse(savedStorage[key].due));
+                    undefined : new Date(Date.parse(savedStorage[key].due));
             Tasks.add(savedStorage[key]);
         });
         LocalStorage.saveToLocalStorage(
@@ -100,6 +103,8 @@ class Page {
 
     constructor(name,type) {
         /// TEST
+        Tasks.resetStorage();
+        Tasks.resetIDsCounter();
         LocalStorage.makeSavedStorageCurrent();
 
         /// END TEST
@@ -224,21 +229,7 @@ class PageTemplate {
             const ul = document.createElement('ul');
             ul.className = 'todos';
             this.tasks.forEach((task) => {
-                const li = document.createElement("li");
-                li.setAttribute('data-id',task.id);
-                li.innerHTML = `
-                    ${Checkbox.get(task.name, task.id, task.notDone)}
-                    <span class="task-name">${task.name}</span>
-                    <span class="task-priority ${Priorities.getByID(task.priority).name}">${Priorities.getByID(task.priority).name}</span>
-                    <div class="task-extras">
-                        ${DuedateView.get(task.due)}
-                        ${ProjectView.get(task.project)}
-                    </div>
-                    <div class="task-edit">
-                        <a onclick="eventAggregator.publish(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventAggregator.publish(\'deleteTaskClick\',event)" class="link-task-delete"></a>
-                    </div>
-                </li>`;
-                ul.appendChild(li);
+                PageTemplate.renderTask(task,ul);
             });
 
             const addTask = document.createElement('li');
@@ -259,6 +250,34 @@ class PageTemplate {
             }
     
             document.querySelector(target).append(ul);
+    }
+
+    static renderTask(task, target) {
+        target.appendChild(this.addTask(task));
+    }
+
+    static renderTaskAfterEdit(task, target) {
+        const parent = target.parentNode;
+        task = PageTemplate.addTask(task);
+        parent.parentNode.insertBefore(task,target.parentNode);
+    }
+
+    static addTask(task) {
+        const li = document.createElement("li");
+                li.setAttribute('data-id',task.id);
+                li.innerHTML = `
+                    ${Checkbox.get(task.name, task.id, task.notDone)}
+                    <span class="task-name">${task.name}</span>
+                    <span class="task-priority ${Priorities.getByID(task.priority).name}">${Priorities.getByID(task.priority).name}</span>
+                    <div class="task-extras">
+                        ${DuedateView.get(task.due)}
+                        ${ProjectView.get(task.project)}
+                    </div>
+                    <div class="task-edit">
+                        <a onclick="eventAggregator.publish(\'editTaskClick\',event)" class="link-task-edit"></a><a onclick="eventAggregator.publish(\'deleteTaskClick\',event)" class="link-task-delete"></a>
+                    </div>
+                </li>`;
+        return li;
     }
 
     static renderForm(target = 'main ul', form = Form.create()) {
@@ -429,12 +448,12 @@ class Form {
         }
     }
 
-    static create(blah) {
-        return new Form(blah).create();
+    static create(task) {
+        return new Form(task).create();
     }
 
-    static edit(blah) {
-        return new FormEdit(blah).create();
+    static edit(task) {
+        return new FormEdit(task).create();
     }
 
     static close() {
@@ -501,15 +520,20 @@ class Form {
         }
     }
 
+    addEditClass() {
+        return '';
+    }
+
     create() {
         Form.close();
 
         const predefined = this.getPredefinedValues();
 
+
         const liForm = document.createElement('li');
         liForm.className = 'todo-form';
         liForm.innerHTML = `
-                <form class="todo-new-form" method="post" data-id="${predefined.id}">
+                <form class="todo-new-form ${this.addEditClass()}" method="post" data-id="${predefined.id}">
                     <span class="task-check"></span>
                         ${this.getNameInput(predefined.name)}
                     <span class="task-priority-edit">
@@ -614,13 +638,33 @@ class FormEdit extends Form {
             LocalStorage.projectsStorage,
             Projects.getAll()
         );
+
+        
     }
 
+    static close(e) {
+        let target = e.target;
+        while(target.getAttribute('data-id') == null) {
+            target = target.parentNode;
+        }
 
+        const id = target.getAttribute('data-id');
+
+        PageTemplate.renderTaskAfterEdit(
+            Tasks.getByID(id),
+            target
+        );
+
+        Form.close();
+    }
+
+    addEditClass() {
+        return 'todo-edit-form';
+    }
 
     getButtons() {
         const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
-        const resetClick = `eventAggregator.publish('reloadPage',currentPage())`;
+        const resetClick = `eventAggregator.publish('reloadPage',event)`;
         return `
             <span class="task-edit-buttons">
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
@@ -655,7 +699,16 @@ class PageController {
         Router.for('projectFilter',id);
     }
 
+    static kindlyCloseCurrentForm() {
+        let existingForm = document.querySelector('.todo-edit-form');
+
+        if (existingForm) {
+            FormEdit.close({target:existingForm});
+        }
+    }
+
     static renderForm() {
+        PageController.kindlyCloseCurrentForm();
         PageTemplate.renderForm();
     }
 
@@ -671,6 +724,10 @@ class PageController {
     static formEditSubmit(e) {
         FormEdit.submit(e);
         Router.for(AppState._currentPage,AppState._currentFilter);
+    }
+
+    static formEditClose(e) {
+        Form.close(e);
     }
 
     static deleteTask(e) {
@@ -702,6 +759,8 @@ class PageController {
 
         const id = target.getAttribute('data-id');
 
+        PageController.kindlyCloseCurrentForm();
+        
         PageTemplate.renderTaskEdit(target,Form.edit(Tasks.getByID(id)));
 
         try {
