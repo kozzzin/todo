@@ -2,7 +2,7 @@
 
 const { helpers } = require('./helpers');
 const { addDays } = require('date-fns');
-const { compareAsc } = require('date-fns')
+const { compareAsc, parseISO } = require('date-fns')
 class Database {
     static storage = {};
     static fieldFactory;
@@ -77,11 +77,11 @@ class Task {
         this.priority = taskProperties.priority;
         this.description = taskProperties.description;
         this.project = this.constructor.addToProject(taskProperties.project);
-        this.id = this.constructor.assignID();
-        this.notDone = true;
+        this.id = this.constructor.assignID(taskProperties.id);
+        this.notDone = taskProperties.notDone === undefined ? true : taskProperties.notDone;
     }
 
-    static assignID() {
+    static assignID(id) {
         return this.ID++;
     }
 
@@ -94,8 +94,6 @@ class Task {
     }
 
     update(updateObj) {
-        // it's important to send project id for update
-        // where handle logic of id assigment ???
         Array.from(Object.keys(updateObj)).forEach(key => {
             let value = updateObj[key];
             switch (key) {
@@ -139,7 +137,7 @@ class Sort {
         return content.sort((a,b) => {
             a = a.due === undefined ? new Date(0) : a.due;
             b = b.due === undefined ? new Date(0) : b.due;
-            return compareAsc(a,b);
+            return compareAsc(parseISO(a),parseISO(b));
         });
     }
 }

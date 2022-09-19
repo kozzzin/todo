@@ -1,32 +1,11 @@
-// AFTER ALL: logic for current page: what to refresh after add and edit
-//, predefined values and so on
-
-// localSTORAGE
-// read storage if not, use our version
-// then set storage and save there
-// save to storage after each interaction
-// reading storage is priority
-
-// we trying to read localStorage
-// if it's not working or not enough good, clear it
-// if it's empty --> create new one
-// after submit, update, delete --> update local storage
-
-
-
-
 // !!! when click edit while another form is opened, another disapears
-
+// date problem, it converts zero value to linux zero which iz 1970 year
 // WANT TO HAVE NAMES OF PAGES IN ONE PLACE:
-// because we use them in interface, for routind and so on
-// need to have configure object
-
-
-
 
 const { helpers } = require('./helpers');
 const { Projects, Tasks, Priorities, Sort } = require('./newTask');
-const { formatDistance, format } = require('date-fns');
+const { formatDistance, format, parseISO } = require('date-fns');
+const { tasksStorage } = require('./tasks');
 
 
 class AppState {
@@ -45,6 +24,20 @@ class AppState {
 
 
 class LocalStorage {
+    static tasksStorage = 'tasksStorage';
+    static projectsStorage = 'projectsStorage';
+
+    static checkLocalStorage() {
+        if (localStorage.length === 0) {
+            this.createLocalStorage();
+        }
+    }
+
+    static createLocalStorage() {
+        localStorage[this.tasksStorage] = this.convertThisToJSON(new Object());
+        localStorage[this.projectsStorage] = this.convertThisToJSON(new Object());
+    }
+
     static convertThisToJSON(storage) {
         return JSON.stringify(storage);
     }
@@ -59,12 +52,37 @@ class LocalStorage {
         return Sort.byDate(storage);
     }
 
-    static saveToLocalStorage(key = 'tasksStorage',object = Tasks.getAll()) {
+    static saveToLocalStorage(key = this.tasksStorage,object = Tasks.getAll()) {
+        this.checkLocalStorage();
         localStorage.setItem(key,this.convertThisToJSON(object));
     }
 
-    static loadObjectFromStorage(key = 'tasksStorage') {
+    static loadObjectFromStorage(key = this.tasksStorage) {
+        this.checkLocalStorage();
         return this.convertJSONToObject(key)
+    }
+
+    static makeSavedStorageCurrent() {
+        this.checkLocalStorage();
+        Tasks.storage = {};
+        const savedStorage = this.loadObjectFromStorage();
+        Object.keys(savedStorage).forEach(key => {
+            const project = savedStorage[key].project;
+            if (project != undefined) {
+                savedStorage[key].project = 
+                this.loadObjectFromStorage(
+                    this.projectsStorage
+                        )[project].name;
+            }
+            savedStorage[key].due =
+                savedStorage[key].due === undefined ?
+                    '' : new Date(Date.parse(savedStorage[key].due));
+            Tasks.add(savedStorage[key]);
+        });
+        LocalStorage.saveToLocalStorage(
+            this.projectsStorage,
+            Projects.getAll()
+        );
     }
 }
 
@@ -82,24 +100,16 @@ class Page {
 
     constructor(name,type) {
         /// TEST
-
-        console.log(LocalStorage.getAsDateSortedArray());
+        LocalStorage.makeSavedStorageCurrent();
 
         /// END TEST
         this.name = name;
         this.type = type;
         this.headerText = this.getHeader();
-        // this.tasks = this.getTasks(Tasks.getSortedByDueDate());
-        this.tasks = this.getTasks(
-            Array.from(
-                Object.values(
-                    JSON.parse(localStorage.tasksStorage)
-                )
-            )
-        );
+        this.tasks = this.getTasks(Tasks.getSortedByDueDate());
+        // this.tasks = this.getTasks(LocalStorage.getAsDateSortedArray());
         this.dateFilters = this.getDateFilters();
         this.projectsList = this.getProjectsList();
-        console.log(this.tasks)
     }
 
     getHeader() {
@@ -176,8 +186,6 @@ class projectFilterPage extends FilterPage {
 }  
 
 
-//maybe register elements on pagetemplate or page entity,
-// it would be easer to do: remove this.form
 class PageTemplate {
     constructor(pageObj) {
         this.name = pageObj.name,
@@ -289,7 +297,7 @@ class Checkbox {
     }
 
     static getValue(notDone) {
-        if (notDone === false) {
+        if (notDone == false) {
             return 'checked';
         }
         return '';
@@ -303,11 +311,11 @@ class Checkbox {
 class DuedateView {               
     static get(date) {
                 if (date) {
-                    const dueDate = new Date(date);
+                    let dueDate = new Date(date);
                     dueDate.setHours(23,59);
-        
+
                     const taskDate = 'Deadline: ' + formatDistance(
-                        new Date(dueDate),
+                        dueDate,
                         Date.now(),
                         {addSuffix:true}
                     );
@@ -409,9 +417,7 @@ class Sidebar {
     }
 }
 
-// QUESTION ABOUT FORM, we have to create special version of form for each page,
-// if we have this pagem then we use next form for it with/
-// some elements already predefined
+
 class Form {
     constructor(taskObj) {
         if (taskObj !== undefined) {
@@ -452,6 +458,10 @@ class Form {
             project: formData.get('task-project')
         });
         LocalStorage.saveToLocalStorage();
+        LocalStorage.saveToLocalStorage(
+            LocalStorage.projectsStorage,
+            Projects.getAll()
+        );
     }
 
     static getFormData() {
@@ -517,7 +527,6 @@ class Form {
 
 
     getPredefinedProject() {
-        console.log(typeof AppState._currentFilter);
         const project = Projects.getByID(AppState._currentFilter);
         if (project) {
             return project.id;
@@ -584,10 +593,6 @@ class Form {
 }
 
 class FormEdit extends Form {
-
-    //     // IF ON PROJECT PAGE, THAN ADD BY DEFAULT
-    //     // IF MAIN HAS PROJECT-ID, THAN USE BY DEFAULT
-
     static submit(e) {
         const formData = this.getFormData();
         this.saveEditedTask(formData);
@@ -605,13 +610,17 @@ class FormEdit extends Form {
         );
         // LOCALSTORAGE TEST
         LocalStorage.saveToLocalStorage();
+        LocalStorage.saveToLocalStorage(
+            LocalStorage.projectsStorage,
+            Projects.getAll()
+        );
     }
 
 
 
     getButtons() {
         const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
-        const resetClick = `eventAggregator.publish('reloadPage',currentPage());console.log(currentPage())`;
+        const resetClick = `eventAggregator.publish('reloadPage',currentPage())`;
         return `
             <span class="task-edit-buttons">
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>
@@ -621,9 +630,6 @@ class FormEdit extends Form {
 
 
 }
-
-// using templates to render
-// using interface methods to highlight links and so on
 
 class Interface {
     static highlightLink() {
@@ -637,18 +643,10 @@ class Interface {
         }
 
     }
-
-
-
-    static unHighlightLink() {
-        
-    }
 }
 
 
 class PageController {
-    // i need to know current page id !
-
     static useDateFilter(date) {
         Router.for('dateFilter',date);
     }
@@ -685,6 +683,10 @@ class PageController {
 
         Tasks.deleteByID(id);
         LocalStorage.saveToLocalStorage();
+        LocalStorage.saveToLocalStorage(
+            LocalStorage.projectsStorage,
+            Projects.getAll()
+        );
         Router.for(AppState._currentPage,AppState._currentFilter);
     }
 
@@ -707,10 +709,6 @@ class PageController {
         } catch {
 
         }
-
-        // BIG TROUBLE: AFTER CANCELATION, WE HAVE TO GET OUR TASK BACK
-        // MAKE PAGE REFRESH
-        // NEXT QUESTION IS, WHICH PAGE WE HAVE TO RELOAD!
     }
 
     static checkTask(event) {
@@ -719,6 +717,8 @@ class PageController {
         Tasks.updateByID(id,{
             notDone: checked
         });
+        
+        LocalStorage.saveToLocalStorage();
     }
 }
 

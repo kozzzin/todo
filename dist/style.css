@@ -299,6 +299,14 @@ input[type="checkbox"]:checked::before {
     font-family: 'Exo 2', sans-serif;
 }
 
+li:has(input[type="checkbox"]:checked) {
+    opacity: 0.5;
+}
+
+li:has(input[type="checkbox"]:checked) .task-name {
+    text-decoration: line-through;
+}
+
 input[type="text"] {
     appearance: none;
     border: 0;

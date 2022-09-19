@@ -38,7 +38,7 @@ function makeTestStorage() {
     newObjects.forEach(obj => Tasks.add(obj))
 }
 
-makeTestStorage();
+// makeTestStorage();
 
 Router.for();
 
