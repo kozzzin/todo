@@ -67,6 +67,7 @@ class LocalStorage {
     static makeSavedStorageCurrent() {
         this.checkLocalStorage();
         Tasks.storage = {};
+        
         const savedStorage = this.loadObjectFromStorage();
         Object.keys(savedStorage).forEach(key => {
             const project = savedStorage[key].project;
@@ -78,7 +79,7 @@ class LocalStorage {
             }
             savedStorage[key].due =
                 savedStorage[key].due === undefined ?
-                    '' : new Date(Date.parse(savedStorage[key].due));
+                    undefined : new Date(Date.parse(savedStorage[key].due));
             Tasks.add(savedStorage[key]);
         });
         LocalStorage.saveToLocalStorage(
@@ -102,6 +103,8 @@ class Page {
 
     constructor(name,type) {
         /// TEST
+        Tasks.resetStorage();
+        Tasks.resetIDsCounter();
         LocalStorage.makeSavedStorageCurrent();
 
         /// END TEST
@@ -526,6 +529,7 @@ class Form {
 
         const predefined = this.getPredefinedValues();
 
+
         const liForm = document.createElement('li');
         liForm.className = 'todo-form';
         liForm.innerHTML = `
@@ -660,7 +664,7 @@ class FormEdit extends Form {
 
     getButtons() {
         const submitClick = `eventAggregator.publish('formEditSubmit',[event])`;
-        const resetClick = `eventAggregator.publish('formEditClose',event)`;
+        const resetClick = `eventAggregator.publish('reloadPage',event)`;
         return `
             <span class="task-edit-buttons">
                 <button onclick="${submitClick}" type="submit" class="save" ">Save</button>

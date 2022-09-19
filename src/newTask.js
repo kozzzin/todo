@@ -135,9 +135,11 @@ class Sort {
             content = Array.from(Object.values(content));
         }
         return content.sort((a,b) => {
-            a = a.due === undefined ? new Date(0) : a.due;
-            b = b.due === undefined ? new Date(0) : b.due;
-            return compareAsc(parseISO(a),parseISO(b));
+            // a = a.due === undefined ? new Date(0) : a.due;
+            // b = b.due === undefined ? new Date(0) : b.due;
+            const a1 = a;
+            const b1 = b;
+            return compareAsc(parseISO(a1),parseISO(b1));
         });
     }
 }
@@ -192,7 +194,9 @@ class DateFilterToday extends DateFilter {
         return Array.from(
             Object.values(this.data))
                 .filter(el => {
-                    el.due = el.due === undefined ? 0 : el.due;
+                    if (el.due === undefined) {
+                        return false;
+                    }
                     return el.due.toString() == today.toString();
                 }
         );
@@ -222,12 +226,12 @@ class DateFilterWeek extends DateFilter {
 
 class DueDate {
     static create(date) {
+        if (date === undefined || date == 0 || date == '') {
+            return undefined;
+        }
         if (date instanceof Date) {
             date.setHours(0,0,0,0);
             return date;
-        }
-        if (date === undefined || date == 0) {
-            return undefined;
         }
         const dateArr = date
             .split('-')

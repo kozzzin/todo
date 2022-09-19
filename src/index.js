@@ -5,6 +5,42 @@ const { Router, PageController, AppState } = require('./newTemplates');
 const { Projects, Tasks, Priorities } = require('./newTask');
 
 
+// open index page
+Router.for();
+
+
+// events
+
+// new task form controls
+eventAggregator.subscribe('addTask',PageController.renderForm);
+eventAggregator.subscribe('formSubmit',PageController.formSubmit);
+eventAggregator.subscribe('closeForm',PageController.closeForm);
+
+// task controls
+eventAggregator.subscribe('deleteTaskClick',PageController.deleteTask);
+eventAggregator.subscribe('editTaskClick',PageController.editTask);
+eventAggregator.subscribe('taskCheckedChange',PageController.checkTask);
+
+// edit form controls
+eventAggregator.subscribe('formEditSubmit',PageController.formEditSubmit);
+eventAggregator.subscribe('formEditClose',PageController.formEditClose);
+
+// navigation controls
+eventAggregator.subscribe('indexClick',Router.for);
+eventAggregator.subscribe('dateFilterClick',PageController.useDateFilter)
+eventAggregator.subscribe('projectFilterClick',PageController.useProjectFilter)
+
+// reload page
+eventAggregator.subscribe('reloadPage',Router.for);
+
+
+// making some variables global
+window.eventAggregator = eventAggregator;
+window.currentPage = function() {
+    return [AppState.currentPage, AppState._currentFilter];
+}
+
+
 function makeTestStorage() {
     const newObjects = [
         {
@@ -38,30 +74,3 @@ function makeTestStorage() {
     newObjects.forEach(obj => Tasks.add(obj))
 }
 
-// makeTestStorage();
-
-Router.for();
-
-
-// events
-eventAggregator.subscribe('addTask',PageController.renderForm);
-eventAggregator.subscribe('closeForm',PageController.closeForm);
-eventAggregator.subscribe('formSubmit',PageController.formSubmit);
-eventAggregator.subscribe('deleteTaskClick',PageController.deleteTask);
-eventAggregator.subscribe('editTaskClick',PageController.editTask);
-eventAggregator.subscribe('taskCheckedChange',PageController.checkTask);
-eventAggregator.subscribe('formEditSubmit',PageController.formEditSubmit);
-eventAggregator.subscribe('formEditClose',PageController.formEditClose);
-eventAggregator.subscribe('dateFilterClick',PageController.useDateFilter)
-eventAggregator.subscribe('projectFilterClick',PageController.useProjectFilter)
-eventAggregator.subscribe('reloadPage',Router.for);
-eventAggregator.subscribe('indexClick',Router.for);
-
-
-
-// where to store global state of page, now page is type... name... so use it for new forms
-
-window.eventAggregator = eventAggregator;
-window.currentPage = function() {
-    return [AppState.currentPage, AppState._currentFilter];
-}
